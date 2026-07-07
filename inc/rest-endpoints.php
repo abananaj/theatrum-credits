@@ -56,6 +56,9 @@ function chance_credits_format_row_for_editor($row)
  * -------------------------------------------------------------------- */
 
 add_action('rest_api_init', function () {
+  // Public by design — only returns already-public data (titles, permalinks,
+  // thumbnails). If this callback is ever extended, keep it that way; add a
+  // capability check before returning anything non-public.
   register_rest_route('chance/v1', '/production-credits/(?P<post_id>\d+)', array(
     array(
       'methods'             => 'GET',
@@ -273,6 +276,9 @@ function chance_credits_delete_credit_callback($request)
  * -------------------------------------------------------------------- */
 
 add_action('rest_api_init', function () {
+  // Public by design — only returns already-public data (titles, permalinks).
+  // If this callback is ever extended, keep it that way; add a capability
+  // check before returning anything non-public.
   register_rest_route('chance/v1', '/artist-credits/(?P<post_id>\d+)', array(
     'methods'             => 'GET',
     'callback'            => 'chance_credits_get_artist_credits_callback',
