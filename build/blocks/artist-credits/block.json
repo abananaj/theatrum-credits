@@ -46,7 +46,20 @@
       "duotone": true
     }
   },
-  "attributes": {},
+  "attributes": {
+    "justifyContent": {
+      "type": "string",
+      "default": "flex-start"
+    },
+    "alignItems": {
+      "type": "string",
+      "default": "flex-start"
+    },
+    "itemWidth": {
+      "type": "string",
+      "default": "240px"
+    }
+  },
   "editorScript": "file:./index.js",
   "editorStyle": "file:./index.css",
   "style": "file:./style-index.css",

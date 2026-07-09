@@ -4,15 +4,32 @@
  *
  * @see https://developer.wordpress.org/block-editor/reference-guides/packages/packages-block-editor/#useblockprops
  */
-import { useBlockProps } from '@wordpress/block-editor';
+import { InspectorControls, useBlockProps } from '@wordpress/block-editor';
 
 /**
  * WordPress dependencies
  */
 import { useState, useEffect } from '@wordpress/element';
-import { Spinner } from '@wordpress/components';
+import { PanelBody, SelectControl, Spinner, TextControl } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
+import { __ } from '@wordpress/i18n';
 import apiFetch from '@wordpress/api-fetch';
+
+const JUSTIFY_OPTIONS = [
+	{ label: __('Left', 'theatrum-blocks'), value: 'flex-start' },
+	{ label: __('Center', 'theatrum-blocks'), value: 'center' },
+	{ label: __('Right', 'theatrum-blocks'), value: 'flex-end' },
+	{ label: __('Space between', 'theatrum-blocks'), value: 'space-between' },
+	{ label: __('Space around', 'theatrum-blocks'), value: 'space-around' },
+	{ label: __('Space evenly', 'theatrum-blocks'), value: 'space-evenly' },
+];
+
+const ALIGN_OPTIONS = [
+	{ label: __('Top', 'theatrum-blocks'), value: 'flex-start' },
+	{ label: __('Center', 'theatrum-blocks'), value: 'center' },
+	{ label: __('Bottom', 'theatrum-blocks'), value: 'flex-end' },
+	{ label: __('Stretch', 'theatrum-blocks'), value: 'stretch' },
+];
 
 /**
  * The edit function describes the structure of your block in the context of the
@@ -22,7 +39,8 @@ import apiFetch from '@wordpress/api-fetch';
  *
  * @return {Element} Element to render.
  */
-export default function Edit() {
+export default function Edit({ attributes, setAttributes }) {
+	const { justifyContent = 'flex-start', alignItems = 'flex-start', itemWidth = '240px' } = attributes;
 	const blockProps = useBlockProps();
 	const [credits, setCredits] = useState([]);
 	const [isLoading, setIsLoading] = useState(false);
@@ -65,10 +83,8 @@ export default function Edit() {
 		const date = credit.date ? decodeHtmlEntities(credit.date) : '';
 
 		return (
-			<li key={credit.id}>
-				<a href={credit.production_url}>
-					<span className="production">{productionTitle}</span>
-				</a>
+			<li key={credit.id} className="credit">
+				<span className="production">{productionTitle}</span>
 				{role && (
 					<>
 						, <span className="role">{role}</span>
@@ -79,15 +95,45 @@ export default function Edit() {
 		);
 	});
 
+	const flexStyle = {
+		justifyContent,
+		alignItems,
+		'--credit-width': itemWidth,
+	};
+
 	return (
-		<div {...blockProps}>
-			{isLoading ? (
-				<Spinner />
-			) : (
-				<ul className="artist-credits-ul">
-					{listItems.length > 0 ? listItems : <li>No credits found</li>}
-				</ul>
-			)}
-		</div>
+		<>
+			<InspectorControls>
+				<PanelBody title={__('Layout', 'theatrum-blocks')}>
+					<SelectControl
+						label={__('Justify content', 'theatrum-blocks')}
+						value={justifyContent}
+						options={JUSTIFY_OPTIONS}
+						onChange={(value) => setAttributes({ justifyContent: value })}
+					/>
+					<SelectControl
+						label={__('Align items', 'theatrum-blocks')}
+						value={alignItems}
+						options={ALIGN_OPTIONS}
+						onChange={(value) => setAttributes({ alignItems: value })}
+					/>
+					<TextControl
+						label={__('Item width', 'theatrum-blocks')}
+						help={__('Any CSS length, e.g. 240px, 10rem, 20%', 'theatrum-blocks')}
+						value={itemWidth}
+						onChange={(value) => setAttributes({ itemWidth: value })}
+					/>
+				</PanelBody>
+			</InspectorControls>
+			<div {...blockProps}>
+				{isLoading ? (
+					<Spinner />
+				) : (
+					<ul className="artist-credits-ul" style={flexStyle}>
+						{listItems.length > 0 ? listItems : <li>No credits found</li>}
+					</ul>
+				)}
+			</div>
+		</>
 	);
 }

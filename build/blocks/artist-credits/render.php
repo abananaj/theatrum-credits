@@ -19,6 +19,23 @@ if (empty($credits)) {
   return;
 }
 
+$allowed_justify = array('flex-start', 'center', 'flex-end', 'space-between', 'space-around', 'space-evenly');
+$allowed_align    = array('flex-start', 'center', 'flex-end', 'stretch');
+
+$justify_content = isset($attributes['justifyContent']) && in_array($attributes['justifyContent'], $allowed_justify, true)
+  ? $attributes['justifyContent']
+  : 'flex-start';
+$align_items      = isset($attributes['alignItems']) && in_array($attributes['alignItems'], $allowed_align, true)
+  ? $attributes['alignItems']
+  : 'flex-start';
+
+$css_length_pattern = '/^\d*\.?\d+(px|em|rem|%|vh|vw|ch)$/';
+$item_width         = isset($attributes['itemWidth']) && preg_match($css_length_pattern, $attributes['itemWidth'])
+  ? $attributes['itemWidth']
+  : '240px';
+
+$flex_style = sprintf('justify-content: %s; align-items: %s; --credit-width: %s;', $justify_content, $align_items, $item_width);
+
 $items = array();
 
 foreach ($credits as $row) {
@@ -39,4 +56,4 @@ foreach ($credits as $row) {
   $items[] = $item;
 }
 
-echo '<ul class="artist-credits-ul">' . implode('', $items) . '</ul>';
+echo '<ul class="artist-credits-ul" style="' . esc_attr($flex_style) . '">' . implode('', $items) . '</ul>';

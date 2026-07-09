@@ -50,6 +50,18 @@
     "roleGroup": {
       "type": "string",
       "default": "all"
+    },
+    "justifyContent": {
+      "type": "string",
+      "default": "flex-start"
+    },
+    "alignItems": {
+      "type": "string",
+      "default": "flex-start"
+    },
+    "itemWidth": {
+      "type": "string",
+      "default": "160px"
     }
   },
   "editorScript": "file:./index.js",

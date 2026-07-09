@@ -1,5 +1,5 @@
 import { InspectorControls, useBlockProps } from '@wordpress/block-editor';
-import { SelectControl, Spinner } from '@wordpress/components';
+import { PanelBody, SelectControl, Spinner, TextControl } from '@wordpress/components';
 import { useState, useEffect } from '@wordpress/element';
 import { useSelect } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
@@ -14,12 +14,21 @@ const VARIATION_OPTIONS = [
   { label: __('Production Partners', 'theatrum-blocks'), value: 'partner' },
 ];
 
-const VARIATION_LABELS = {
-  all: 'Production Credits',
-  team: 'Production Team',
-  cast: 'Production Cast',
-  partner: 'Production Partners',
-};
+const JUSTIFY_OPTIONS = [
+  { label: __('Left', 'theatrum-blocks'), value: 'flex-start' },
+  { label: __('Center', 'theatrum-blocks'), value: 'center' },
+  { label: __('Right', 'theatrum-blocks'), value: 'flex-end' },
+  { label: __('Space between', 'theatrum-blocks'), value: 'space-between' },
+  { label: __('Space around', 'theatrum-blocks'), value: 'space-around' },
+  { label: __('Space evenly', 'theatrum-blocks'), value: 'space-evenly' },
+];
+
+const ALIGN_OPTIONS = [
+  { label: __('Top', 'theatrum-blocks'), value: 'flex-start' },
+  { label: __('Center', 'theatrum-blocks'), value: 'center' },
+  { label: __('Bottom', 'theatrum-blocks'), value: 'flex-end' },
+  { label: __('Stretch', 'theatrum-blocks'), value: 'stretch' },
+];
 
 function filterByRoleGroup(credits, roleGroup) {
   if (roleGroup === 'all' || !roleGroup) return credits;
@@ -30,7 +39,7 @@ function filterByRoleGroup(credits, roleGroup) {
 }
 
 export default function Edit({ attributes, setAttributes }) {
-  const { roleGroup = 'all' } = attributes;
+  const { roleGroup = 'all', justifyContent = 'flex-start', alignItems = 'flex-start', itemWidth = '160px' } = attributes;
   const blockProps = useBlockProps();
   const [credits, setCredits] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -69,16 +78,24 @@ export default function Edit({ attributes, setAttributes }) {
 
     return (
       <li key={credit.id} className="credit">
-        {credit.artist_thumbnail && (
-          <img src={credit.artist_thumbnail} alt={artistTitle} className="artist-headshot" />
-        )}
-        <p className="artist"><a href={credit.artist_url}>{artistTitle}</a></p>
-        {role && (
-          <p className="role">{role}</p>
-        )}
+        <div className="credit-link">
+          {credit.artist_thumbnail && (
+            <img src={credit.artist_thumbnail} alt={artistTitle} className="artist-headshot" />
+          )}
+          <p className="artist">{artistTitle}</p>
+          {role && (
+            <p className="role">{role}</p>
+          )}
+        </div>
       </li>
     );
   });
+
+  const flexStyle = {
+    justifyContent,
+    alignItems,
+    '--credit-width': itemWidth,
+  };
 
   return (
     <>
@@ -91,13 +108,32 @@ export default function Edit({ attributes, setAttributes }) {
             onChange={(value) => setAttributes({ roleGroup: value })}
           />
         </div>
+        <PanelBody title={__('Layout', 'theatrum-blocks')}>
+          <SelectControl
+            label={__('Justify content', 'theatrum-blocks')}
+            value={justifyContent}
+            options={JUSTIFY_OPTIONS}
+            onChange={(value) => setAttributes({ justifyContent: value })}
+          />
+          <SelectControl
+            label={__('Align items', 'theatrum-blocks')}
+            value={alignItems}
+            options={ALIGN_OPTIONS}
+            onChange={(value) => setAttributes({ alignItems: value })}
+          />
+          <TextControl
+            label={__('Item width', 'theatrum-blocks')}
+            help={__('Any CSS length, e.g. 160px, 10rem, 20%', 'theatrum-blocks')}
+            value={itemWidth}
+            onChange={(value) => setAttributes({ itemWidth: value })}
+          />
+        </PanelBody>
       </InspectorControls>
       <div {...blockProps}>
-        <p className="production-credits-label">{VARIATION_LABELS[roleGroup] || VARIATION_LABELS.all}</p>
         {isLoading ? (
           <Spinner />
         ) : (
-          <ul className="production-credits-ul">
+          <ul className="production-credits-ul" style={flexStyle}>
             {listItems.length > 0 ? listItems : <li>No credits found</li>}
           </ul>
         )}
