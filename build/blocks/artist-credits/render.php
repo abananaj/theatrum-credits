@@ -4,7 +4,8 @@
  * Artist Credits Block - Server-side render callback
  *
  * Displays all productions an artist has been credited in,
- * ordered by credit_date descending. Year is derived from credit_date (Ymd format).
+ * ordered by credit_date descending. Year is derived from credit_date, which is
+ * stored as a Unix timestamp string (ACF "opening" field, 'U' return format).
  */
 
 $post_id = get_the_ID();
@@ -43,14 +44,16 @@ foreach ($credits as $row) {
   $production_title = get_the_title($production_id);
   $production_url   = get_permalink($production_id);
   $display_role     = $row->credit_role ?: $row->credit_role_group;
-  $year             = $row->credit_date ? date('Y', strtotime($row->credit_date)) : '';
+  $year             = $row->credit_date
+    ? date('Y', is_numeric($row->credit_date) ? (int) $row->credit_date : strtotime($row->credit_date))
+    : '';
 
   $item = '<li class="credit"><a href="' . esc_url($production_url) . '"><span class="title">' . esc_html($production_title) . '</span></a>';
 
   $parts = array();
-  if (! empty($display_role)) $parts[] = '<span class="role">' . esc_html($display_role) . '</span>';
+  if (! empty($display_role)) $parts[] = '<span class="role">' . esc_html($display_role) . ',</span><br>';
   if (! empty($year))         $parts[] = '<span class="date">' . esc_html($year) . '</span>';
-  if (! empty($parts))        $item   .= '<p>' . implode(', ', $parts) . '</p>';
+  if (! empty($parts))        $item   .= '<p>' . implode('', $parts) . '</p>';
 
   $item   .= '</li>';
   $items[] = $item;

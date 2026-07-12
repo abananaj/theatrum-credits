@@ -293,7 +293,9 @@ function chance_credits_get_artist_credits_callback($request)
   $output    = array();
 
   foreach ($rows as $row) {
-    $year     = $row->credit_date ? date('Y', strtotime($row->credit_date)) : '';
+    $year     = $row->credit_date
+      ? date('Y', is_numeric($row->credit_date) ? (int) $row->credit_date : strtotime($row->credit_date))
+      : '';
     $output[] = array(
       'id'               => (int) $row->credit_ID,
       'production_title' => get_the_title($row->credit_production),
