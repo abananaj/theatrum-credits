@@ -93,6 +93,19 @@ export default function CreditsManager() {
 
   const saveCredits = useCallback(async () => {
     if (!postId) return;
+
+    const incomplete = rows.filter((r) => r.isNew && !r._deleted && !r.artist_id);
+    if (incomplete.length > 0) {
+      setNotice({
+        type: 'error',
+        message:
+          incomplete.length === 1
+            ? 'Select an artist for the new credit row before saving.'
+            : `Select an artist for all ${incomplete.length} new credit rows before saving.`,
+      });
+      return;
+    }
+
     setIsSaving(true);
     setNotice(null);
 

@@ -229,6 +229,11 @@ function chance_credits_update_credit_callback($request)
 
   $artist_post     = get_post($artist_id);
   $production_post = get_post((int) $row->credit_production);
+
+  if (! $production_post || ! $artist_post) {
+    return new WP_Error('invalid_ids', 'Production or artist not found.', array('status' => 400));
+  }
+
   $credit_title    = $production_post->post_title . ' / ' . $artist_post->post_title;
 
   $wpdb->update(
