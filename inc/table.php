@@ -21,6 +21,8 @@ function chance_credits_create_table()
   credit_role_group varchar(100) NOT NULL DEFAULT '',
   credit_date varchar(20) NOT NULL DEFAULT '',
   credit_order int(11) UNSIGNED NOT NULL DEFAULT 0,
+  credit_created datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  credit_modified datetime NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY  (credit_ID),
   KEY credit_artist (credit_artist),
   KEY credit_production (credit_production),
@@ -31,12 +33,12 @@ function chance_credits_create_table()
   require_once ABSPATH . 'wp-admin/includes/upgrade.php';
   dbDelta($sql);
 
-  update_option('chance_credits_db_version', '1.0.0');
+  update_option('chance_credits_db_version', '1.1.0');
 }
 
 function chance_credits_maybe_create_table()
 {
-  if (get_option('chance_credits_db_version') !== '1.0.0') {
+  if (get_option('chance_credits_db_version') !== '1.1.0') {
     chance_credits_create_table();
   }
 }
