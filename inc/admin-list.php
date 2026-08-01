@@ -4,7 +4,7 @@ if (! class_exists('WP_List_Table')) {
   require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
 }
 
-class Chance_Credits_List_Table extends WP_List_Table
+class Theatrum_Credits_List_Table extends WP_List_Table
 {
   public function __construct()
   {
@@ -47,7 +47,7 @@ class Chance_Credits_List_Table extends WP_List_Table
     $orderby = in_array($_GET['orderby'] ?? '', $allowed_orderby, true) ? $_GET['orderby'] : 'credit_production';
     $order   = (($_GET['order'] ?? 'asc') === 'desc') ? 'DESC' : 'ASC';
 
-    $table  = CHANCE_CREDITS_TABLE;
+    $table  = THEATRUM_CREDITS_TABLE;
     $search = sanitize_text_field($_GET['s'] ?? '');
 
     if ($search) {
@@ -113,9 +113,9 @@ class Chance_Credits_List_Table extends WP_List_Table
   }
 }
 
-function chance_credits_admin_page()
+function theatrum_credits_admin_page()
 {
-  $table = new Chance_Credits_List_Table();
+  $table = new Theatrum_Credits_List_Table();
   $table->prepare_items();
   ?>
   <div class="wrap">
@@ -123,7 +123,7 @@ function chance_credits_admin_page()
     <hr class="wp-header-end">
     <form method="get">
       <input type="hidden" name="post_type" value="production">
-      <input type="hidden" name="page" value="chance-credits-list">
+      <input type="hidden" name="page" value="theatrum-credits-list">
       <?php $table->search_box('Search credits', 'credits-search'); ?>
       <?php $table->display(); ?>
     </form>
@@ -137,7 +137,7 @@ add_action('admin_menu', function () {
     'Production Credits',
     'Credits',
     'edit_posts',
-    'chance-credits-list',
-    'chance_credits_admin_page'
+    'theatrum-credits-list',
+    'theatrum_credits_admin_page'
   );
 });

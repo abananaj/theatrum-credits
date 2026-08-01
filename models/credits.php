@@ -24,7 +24,7 @@ function get_production_credits($production_id, $args = array())
   );
   $args = wp_parse_args($args, $defaults);
 
-  $table = CHANCE_CREDITS_TABLE;
+  $table = THEATRUM_CREDITS_TABLE;
 
   if (! empty($args['role_group'])) {
     $sql = $wpdb->prepare(
@@ -72,7 +72,7 @@ function get_artist_productions($artist_id, $args = array())
   );
   $args = wp_parse_args($args, $defaults);
 
-  $table = CHANCE_CREDITS_TABLE;
+  $table = THEATRUM_CREDITS_TABLE;
 
   if (! empty($args['role_group'])) {
     return $wpdb->get_results($wpdb->prepare(
@@ -157,7 +157,7 @@ function count_artist_productions($artist_id)
   global $wpdb;
 
   return (int) $wpdb->get_var($wpdb->prepare(
-    "SELECT COUNT(DISTINCT credit_production) FROM " . CHANCE_CREDITS_TABLE . " WHERE credit_artist = %d",
+    "SELECT COUNT(DISTINCT credit_production) FROM " . THEATRUM_CREDITS_TABLE . " WHERE credit_artist = %d",
     $artist_id
   ));
 }
@@ -209,7 +209,7 @@ add_action('save_post_credit', function ($post_id) {
 
   if ($ct_credit_id) {
     $wpdb->update(
-      CHANCE_CREDITS_TABLE,
+      THEATRUM_CREDITS_TABLE,
       array(
         'credit_title'      => $credit_title,
         'credit_name'       => sanitize_title($credit_title),
@@ -225,12 +225,12 @@ add_action('save_post_credit', function ($post_id) {
     );
   } else {
     $max_order = (int) $wpdb->get_var($wpdb->prepare(
-      "SELECT MAX(credit_order) FROM " . CHANCE_CREDITS_TABLE . " WHERE credit_production = %d",
+      "SELECT MAX(credit_order) FROM " . THEATRUM_CREDITS_TABLE . " WHERE credit_production = %d",
       $production_id
     ));
 
     $wpdb->insert(
-      CHANCE_CREDITS_TABLE,
+      THEATRUM_CREDITS_TABLE,
       array(
         'credit_title'      => $credit_title,
         'credit_name'       => sanitize_title($credit_title),

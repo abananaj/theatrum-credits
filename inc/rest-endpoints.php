@@ -4,11 +4,11 @@ if (! defined('ABSPATH')) {
   exit;
 }
 
-define('CHANCE_CREDITS_VALID_ROLE_GROUPS', array(
+define('THEATRUM_CREDITS_VALID_ROLE_GROUPS', array(
   'playwright', 'actor', 'director', 'choreographer', 'designer', 'producer', 'other',
 ));
 
-function chance_credits_editor_permission_check()
+function theatrum_credits_editor_permission_check()
 {
   return current_user_can('edit_posts');
 }
@@ -17,16 +17,16 @@ function chance_credits_editor_permission_check()
  * Helpers
  * -------------------------------------------------------------------- */
 
-function chance_credits_get_row($credit_id)
+function theatrum_credits_get_row($credit_id)
 {
   global $wpdb;
   return $wpdb->get_row($wpdb->prepare(
-    "SELECT * FROM " . CHANCE_CREDITS_TABLE . " WHERE credit_ID = %d",
+    "SELECT * FROM " . THEATRUM_CREDITS_TABLE . " WHERE credit_ID = %d",
     $credit_id
   ));
 }
 
-function chance_credits_verify_ownership($row)
+function theatrum_credits_verify_ownership($row)
 {
   if (! $row) {
     return new WP_Error('not_found', 'Credit not found.', array('status' => 404));
@@ -37,7 +37,7 @@ function chance_credits_verify_ownership($row)
   return true;
 }
 
-function chance_credits_format_row_for_editor($row)
+function theatrum_credits_format_row_for_editor($row)
 {
   return array(
     'id'               => (int) $row->credit_ID,
@@ -59,30 +59,30 @@ add_action('rest_api_init', function () {
   // Public by design — only returns already-public data (titles, permalinks,
   // thumbnails). If this callback is ever extended, keep it that way; add a
   // capability check before returning anything non-public.
-  register_rest_route('chance/v1', '/production-credits/(?P<post_id>\d+)', array(
+  register_rest_route('theatrum/v1', '/production-credits/(?P<post_id>\d+)', array(
     array(
       'methods'             => 'GET',
-      'callback'            => 'chance_credits_get_production_credits_callback',
+      'callback'            => 'theatrum_credits_get_production_credits_callback',
       'permission_callback' => '__return_true',
     ),
     array(
       'methods'             => 'POST',
-      'callback'            => 'chance_credits_create_credit_callback',
-      'permission_callback' => 'chance_credits_editor_permission_check',
+      'callback'            => 'theatrum_credits_create_credit_callback',
+      'permission_callback' => 'theatrum_credits_editor_permission_check',
     ),
   ));
 });
 
-function chance_credits_get_production_credits_callback($request)
+function theatrum_credits_get_production_credits_callback($request)
 {
   $production_id = intval($request['post_id']);
   $rows          = get_production_credits($production_id);
-  $output        = array_map('chance_credits_format_row_for_editor', $rows);
+  $output        = array_map('theatrum_credits_format_row_for_editor', $rows);
 
   return new WP_REST_Response(array('credits' => $output), 200);
 }
 
-function chance_credits_create_credit_callback($request)
+function theatrum_credits_create_credit_callback($request)
 {
   global $wpdb;
 
@@ -91,7 +91,7 @@ function chance_credits_create_credit_callback($request)
   $role_group    = sanitize_text_field($request->get_param('role_group'));
   $role          = sanitize_text_field($request->get_param('role') ?: '');
 
-  if (! in_array($role_group, CHANCE_CREDITS_VALID_ROLE_GROUPS, true)) {
+  if (! in_array($role_group, THEATRUM_CREDITS_VALID_ROLE_GROUPS, true)) {
     return new WP_Error('invalid_role_group', 'Invalid role group.', array('status' => 400));
   }
 
@@ -107,14 +107,14 @@ function chance_credits_create_credit_callback($request)
   }
 
   $max_order = (int) $wpdb->get_var($wpdb->prepare(
-    "SELECT MAX(credit_order) FROM " . CHANCE_CREDITS_TABLE . " WHERE credit_production = %d",
+    "SELECT MAX(credit_order) FROM " . THEATRUM_CREDITS_TABLE . " WHERE credit_production = %d",
     $production_id
   ));
 
   $credit_title = $production_post->post_title . ' / ' . $artist_post->post_title;
 
   $inserted = $wpdb->insert(
-    CHANCE_CREDITS_TABLE,
+    THEATRUM_CREDITS_TABLE,
     array(
       'credit_title'      => $credit_title,
       'credit_name'       => sanitize_title($credit_title),
@@ -132,9 +132,9 @@ function chance_credits_create_credit_callback($request)
     return new WP_Error('insert_failed', 'Failed to create credit.', array('status' => 500));
   }
 
-  $new_row = chance_credits_get_row((int) $wpdb->insert_id);
+  $new_row = theatrum_credits_get_row((int) $wpdb->insert_id);
 
-  return new WP_REST_Response(chance_credits_format_row_for_editor($new_row), 201);
+  return new WP_REST_Response(theatrum_credits_format_row_for_editor($new_row), 201);
 }
 
 /* -----------------------------------------------------------------------
@@ -142,14 +142,14 @@ function chance_credits_create_credit_callback($request)
  * -------------------------------------------------------------------- */
 
 add_action('rest_api_init', function () {
-  register_rest_route('chance/v1', '/production-credits/(?P<post_id>\d+)/reorder', array(
+  register_rest_route('theatrum/v1', '/production-credits/(?P<post_id>\d+)/reorder', array(
     'methods'             => 'POST',
-    'callback'            => 'chance_credits_reorder_callback',
-    'permission_callback' => 'chance_credits_editor_permission_check',
+    'callback'            => 'theatrum_credits_reorder_callback',
+    'permission_callback' => 'theatrum_credits_editor_permission_check',
   ));
 });
 
-function chance_credits_reorder_callback($request)
+function theatrum_credits_reorder_callback($request)
 {
   global $wpdb;
 
@@ -165,7 +165,7 @@ function chance_credits_reorder_callback($request)
   }
 
   $ids          = array_map('intval', $order);
-  $table        = CHANCE_CREDITS_TABLE;
+  $table        = THEATRUM_CREDITS_TABLE;
   $placeholders = implode(',', array_fill(0, count($ids), '%d'));
 
   $valid_ids = $wpdb->get_col($wpdb->prepare(
@@ -195,27 +195,27 @@ function chance_credits_reorder_callback($request)
  * -------------------------------------------------------------------- */
 
 add_action('rest_api_init', function () {
-  register_rest_route('chance/v1', '/credit/(?P<credit_id>\d+)', array(
+  register_rest_route('theatrum/v1', '/credit/(?P<credit_id>\d+)', array(
     array(
       'methods'             => 'PUT',
-      'callback'            => 'chance_credits_update_credit_callback',
-      'permission_callback' => 'chance_credits_editor_permission_check',
+      'callback'            => 'theatrum_credits_update_credit_callback',
+      'permission_callback' => 'theatrum_credits_editor_permission_check',
     ),
     array(
       'methods'             => 'DELETE',
-      'callback'            => 'chance_credits_delete_credit_callback',
-      'permission_callback' => 'chance_credits_editor_permission_check',
+      'callback'            => 'theatrum_credits_delete_credit_callback',
+      'permission_callback' => 'theatrum_credits_editor_permission_check',
     ),
   ));
 });
 
-function chance_credits_update_credit_callback($request)
+function theatrum_credits_update_credit_callback($request)
 {
   global $wpdb;
 
   $credit_id = intval($request['credit_id']);
-  $row       = chance_credits_get_row($credit_id);
-  $check     = chance_credits_verify_ownership($row);
+  $row       = theatrum_credits_get_row($credit_id);
+  $check     = theatrum_credits_verify_ownership($row);
 
   if (is_wp_error($check)) return $check;
 
@@ -223,7 +223,7 @@ function chance_credits_update_credit_callback($request)
   $role       = sanitize_text_field($request->get_param('role') ?? $row->credit_role);
   $artist_id  = intval($request->get_param('artist') ?: $row->credit_artist);
 
-  if (! in_array($role_group, CHANCE_CREDITS_VALID_ROLE_GROUPS, true)) {
+  if (! in_array($role_group, THEATRUM_CREDITS_VALID_ROLE_GROUPS, true)) {
     return new WP_Error('invalid_role_group', 'Invalid role group.', array('status' => 400));
   }
 
@@ -237,7 +237,7 @@ function chance_credits_update_credit_callback($request)
   $credit_title    = $production_post->post_title . ' / ' . $artist_post->post_title;
 
   $wpdb->update(
-    CHANCE_CREDITS_TABLE,
+    THEATRUM_CREDITS_TABLE,
     array(
       'credit_title'      => $credit_title,
       'credit_name'       => sanitize_title($credit_title),
@@ -250,21 +250,21 @@ function chance_credits_update_credit_callback($request)
     array('%d')
   );
 
-  return new WP_REST_Response(chance_credits_format_row_for_editor(chance_credits_get_row($credit_id)), 200);
+  return new WP_REST_Response(theatrum_credits_format_row_for_editor(theatrum_credits_get_row($credit_id)), 200);
 }
 
-function chance_credits_delete_credit_callback($request)
+function theatrum_credits_delete_credit_callback($request)
 {
   global $wpdb;
 
   $credit_id = intval($request['credit_id']);
-  $row       = chance_credits_get_row($credit_id);
-  $check     = chance_credits_verify_ownership($row);
+  $row       = theatrum_credits_get_row($credit_id);
+  $check     = theatrum_credits_verify_ownership($row);
 
   if (is_wp_error($check)) return $check;
 
   $deleted = $wpdb->delete(
-    CHANCE_CREDITS_TABLE,
+    THEATRUM_CREDITS_TABLE,
     array('credit_ID' => $credit_id),
     array('%d')
   );
@@ -284,14 +284,14 @@ add_action('rest_api_init', function () {
   // Public by design — only returns already-public data (titles, permalinks).
   // If this callback is ever extended, keep it that way; add a capability
   // check before returning anything non-public.
-  register_rest_route('chance/v1', '/artist-credits/(?P<post_id>\d+)', array(
+  register_rest_route('theatrum/v1', '/artist-credits/(?P<post_id>\d+)', array(
     'methods'             => 'GET',
-    'callback'            => 'chance_credits_get_artist_credits_callback',
+    'callback'            => 'theatrum_credits_get_artist_credits_callback',
     'permission_callback' => '__return_true',
   ));
 });
 
-function chance_credits_get_artist_credits_callback($request)
+function theatrum_credits_get_artist_credits_callback($request)
 {
   $artist_id = intval($request['post_id']);
   $rows      = get_artist_productions($artist_id);

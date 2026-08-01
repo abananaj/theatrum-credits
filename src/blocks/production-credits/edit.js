@@ -54,7 +54,7 @@ export default function Edit({ attributes, setAttributes }) {
 
     setIsLoading(true);
 
-    apiFetch({ path: `/chance/v1/production-credits/${postId}` })
+    apiFetch({ path: `/theatrum/v1/production-credits/${postId}` })
       .then((data) => {
         setCredits(filterByRoleGroup(data.credits || [], roleGroup));
         setIsLoading(false);

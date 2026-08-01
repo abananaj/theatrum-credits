@@ -41,15 +41,15 @@ CREATE TABLE ct_credits (
 
 ## Phase 1 — Database Setup
 
-**Files:** `inc/table.php`, `chance-credits.php`
+**Files:** `inc/table.php`, `theatrum-credits.php`
 
 1. Create `inc/table.php`:
-   - Define `chance_credits_create_table()` using `dbDelta()`
-   - Version-gate with `get_option('chance_credits_db_version')`
-   - Hook `chance_credits_maybe_create_table()` on `init`
+   - Define `theatrum_credits_create_table()` using `dbDelta()`
+   - Version-gate with `get_option('theatrum_credits_db_version')`
+   - Hook `theatrum_credits_maybe_create_table()` on `init`
 
-2. Update `chance-credits.php`:
-   - Add `global $wpdb; define('CHANCE_CREDITS_TABLE', $wpdb->prefix . 'credits');`
+2. Update `theatrum-credits.php`:
+   - Add `global $wpdb; define('THEATRUM_CREDITS_TABLE', $wpdb->prefix . 'credits');`
    - Require `inc/table.php`
 
 3. **Run:** Load any WordPress page to trigger table creation. Verify table exists.
@@ -63,7 +63,7 @@ CREATE TABLE ct_credits (
 Goal: populate ct_credits from existing credit posts. Does NOT delete credit posts.
 
 ```
-wp eval-file wp-content/mu-plugins/chance-credits/inc/migration.php
+wp eval-file wp-content/mu-plugins/theatrum-credits/inc/migration.php
 ```
 
 Script logic:
@@ -108,7 +108,7 @@ All functions return plain arrays of row objects (not WP_Query).
 
 **File:** `inc/rest-endpoints.php` — expand existing file
 
-Namespace: `chance/v1`
+Namespace: `theatrum/v1`
 
 | Method | Route | Purpose |
 |---|---|---|
@@ -183,15 +183,15 @@ stop not the same artist
 
 ### Registration
 
-In `chance-credits.php`, enqueue the compiled script on production edit pages only:
+In `theatrum-credits.php`, enqueue the compiled script on production edit pages only:
 ```php
 add_action('enqueue_block_editor_assets', function () {
   $screen = get_current_screen();
   if (! $screen || $screen->post_type !== 'production') return;
-  wp_enqueue_script('chance-credits-manager', ...);
+  wp_enqueue_script('theatrum-credits-manager', ...);
   // Pass REST nonce and base URL so the React component can make authenticated requests
-  wp_localize_script('chance-credits-manager', 'chanceCredits', [
-    'restUrl' => rest_url('chance/v1/'),
+  wp_localize_script('theatrum-credits-manager', 'theatrumCredits', [
+    'restUrl' => rest_url('theatrum/v1/'),
     'nonce'   => wp_create_nonce('wp_rest'),
     'postId'  => get_the_ID(),
   ]);
@@ -217,9 +217,9 @@ Implemented as a `PluginDocumentSettingPanel` (renders in the block editor right
 
 ### Behaviour
 
-- **On mount:** `GET /chance/v1/production-credits/{postId}` → populate rows
+- **On mount:** `GET /theatrum/v1/production-credits/{postId}` → populate rows
 - **Add row:** append empty row to local state
-- **Delete row:** `DELETE /chance/v1/production-credits/{credit_id}` (if saved) or remove from state (if unsaved)
+- **Delete row:** `DELETE /theatrum/v1/production-credits/{credit_id}` (if saved) or remove from state (if unsaved)
 - **Reorder:** drag handle or ↑↓ arrows update local order
 - **Save Credits button:**
   1. For new rows: `POST` each one

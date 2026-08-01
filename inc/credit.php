@@ -28,7 +28,7 @@ function ct_register_credit()
 		'menu_icon'          => 'dashicons-admin-post',
 		'supports'           => array('title', 'custom-fields'),
 		'taxonomies'         => array('season', 'series'),
-		'has_archive'        => 'chance-credits',
+		'has_archive'        => 'theatrum-credits',
 		'rewrite'            => false,
 		'delete_with_user'   => false,
 		'hierarchical'       => false,

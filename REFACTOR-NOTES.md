@@ -25,7 +25,7 @@ custom SQL table `ct_credits` for better query performance and simpler data mana
 ### Files created/modified
 
 - `inc/table.php` — `dbDelta()` table creation, version-gated
-- `chance-credits.php` — added `CHANCE_CREDITS_TABLE` constant, requires new includes
+- `theatrum-credits.php` — added `THEATRUM_CREDITS_TABLE` constant, requires new includes
 - `models/credits.php` — full rewrite: all query functions use `$wpdb` against `ct_credits`, sync writes to table + `credit_ids` postmeta on production
 - `inc/acf-fields.php` — removed `credit_id` sub_field from repeater
 - `inc/rest-endpoints.php` — both callbacks rewritten to query `ct_credits`

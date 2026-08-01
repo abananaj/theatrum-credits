@@ -1,4 +1,4 @@
-# Chance Theater Credits Plugin
+# Theatrum Credits
 
 Custom credit management system for Chance Theater production website.
 
@@ -81,7 +81,7 @@ Two custom Gutenberg blocks available:
 
 ### Production Credits Block
 
-- **Name**: `chance-credits/production-credits`
+- **Name**: `theatrum-credits/production-credits`
 - **Used on**: Production pages
 - **Displays**: Cast and crew organized by role_group
 - **Context**: Uses `postId` and `postType` from block context
@@ -89,7 +89,7 @@ Two custom Gutenberg blocks available:
 
 ### Artist Productions Block
 
-- **Name**: `chance-credits/artist-productions`
+- **Name**: `theatrum-credits/artist-productions`
 - **Used on**: Artist pages
 - **Displays**: All productions artist has worked on
 - **Context**: Uses `postId` and `postType` from block context
@@ -98,8 +98,8 @@ Two custom Gutenberg blocks available:
 ## File Structure
 
 ```
-chance-credits/
-├── chance-credits.php              # Main plugin file
+theatrum-credits/
+├── theatrum-credits.php              # Main plugin file
 ├── models/
 │   └── credits.php                 # All query functions & auto-sync
 ├── inc/

@@ -58,7 +58,7 @@ export default function Edit({ attributes, setAttributes }) {
 		setIsLoading(true);
 
 		// Fetch credits using REST endpoint
-		apiFetch({ path: `/chance/v1/artist-credits/${postId}` })
+		apiFetch({ path: `/theatrum/v1/artist-credits/${postId}` })
 			.then((data) => {
 				setCredits(data.credits || []);
 				setIsLoading(false);

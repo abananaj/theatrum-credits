@@ -1,5 +1,5 @@
 {
-  "name": "chance-credits",
+  "name": "theatrum-credits",
   "version": "1.0.0",
   "scripts": {
     "build:blocks": "wp-scripts build",

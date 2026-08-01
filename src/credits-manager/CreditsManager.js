@@ -32,7 +32,7 @@ export default function CreditsManager() {
   const loadCredits = useCallback(() => {
     if (!postId) return;
     setIsLoading(true);
-    apiFetch({ path: `/chance/v1/production-credits/${postId}` })
+    apiFetch({ path: `/theatrum/v1/production-credits/${postId}` })
       .then((data) => {
         setRows((data.credits || []).map(rowFromApi));
         setIsLoading(false);
@@ -117,7 +117,7 @@ export default function CreditsManager() {
 
       await Promise.all(
         toDelete.map((r) =>
-          apiFetch({ path: `/chance/v1/credit/${r.id}`, method: 'DELETE' })
+          apiFetch({ path: `/theatrum/v1/credit/${r.id}`, method: 'DELETE' })
         )
       );
 
@@ -125,7 +125,7 @@ export default function CreditsManager() {
       await Promise.all(
         toCreate.map(async (r) => {
           const result = await apiFetch({
-            path: `/chance/v1/production-credits/${postId}`,
+            path: `/theatrum/v1/production-credits/${postId}`,
             method: 'POST',
             data: { artist: r.artist_id, role_group: r.role_group, role: r.role },
           });
@@ -136,7 +136,7 @@ export default function CreditsManager() {
       await Promise.all(
         toUpdate.map((r) =>
           apiFetch({
-            path: `/chance/v1/credit/${r.id}`,
+            path: `/theatrum/v1/credit/${r.id}`,
             method: 'PUT',
             data: { artist: r.artist_id, role_group: r.role_group, role: r.role },
           })
@@ -149,7 +149,7 @@ export default function CreditsManager() {
 
       if (orderedIds.length > 0) {
         await apiFetch({
-          path: `/chance/v1/production-credits/${postId}/reorder`,
+          path: `/theatrum/v1/production-credits/${postId}/reorder`,
           method: 'POST',
           data: { order: orderedIds },
         });
@@ -175,7 +175,7 @@ export default function CreditsManager() {
   const visibleRows = rows.filter((r) => !r._deleted);
 
   return (
-    <div className="chance-credits-manager">
+    <div className="theatrum-credits-manager">
       {notice && (
         <Notice status={notice.type} isDismissible onRemove={() => setNotice(null)}>
           {notice.message}

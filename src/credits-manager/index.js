@@ -4,7 +4,7 @@ import domReady from '@wordpress/dom-ready';
 import CreditsManager from './CreditsManager';
 
 domReady(() => {
-  const container = document.getElementById('chance-credits-manager-root');
+  const container = document.getElementById('theatrum-credits-manager-root');
   if (!container) return;
   createRoot(container).render(<CreditsManager />);
 });
