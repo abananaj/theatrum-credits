@@ -1,170 +1,153 @@
 # Theatrum Credits
 
-Custom credit management system for Chance Theater production website.
+Production credits (cast & crew) management for the Chance Theater website — a custom
+`ct_credits` SQL table plus a React meta-box editor, replacing an earlier ACF-repeater +
+junction-post-type design entirely (see "History" below).
 
-## Features
+## Architecture
 
-- **Production Credits Management**: Manage cast and crew through an ACF repeater field on production pages
-- **Artist Production History**: Display all productions an artist has worked on
-- **Automatic Sync**: Credits automatically created/updated when you save the repeater
-- **Custom Blocks**: Two display blocks for showing credits on frontend
-
-## Installation
-
-1. Activate the plugin through WordPress admin
-2. Ensure ACF Pro is installed (required for Repeater field type)
-3. Go to a Production page to see the "Cast & Crew" field
-
-## Custom Post Types
-
-- **production**: Productions/shows
-- **artist**: Artist profiles
-- **credit**: Junction post type (created automatically via auto-sync)
-
-## ACF Integration
-
-### Field Group: Cast & Crew
-
-Applied to: `production` posts
-
-**Repeater Field: `production_credits_repeater`**
-
-- `artist` (Post Object) - Link to artist
-- `role_group` (Select) - playwright, actor, director, choreographer, designer, producer, other
-- `role` (Text) - Specific role (e.g., "Hamlet", "Stage Manager")
-
-When you save, a `credit` post is automatically created with these meta fields:
-
-- `production` (post ID)
-- `artist` (post ID)
-- `role_group` (string)
-- `role` (string)
-
-## Query Functions
-
-All functions are global scope (no namespaces).
-
-### Production Credits
-
-```php
-get_production_credits($production_id, $args)
-get_production_credits($production_id, array('role_group' => 'actor'))
-```
-
-### Artist Productions
-
-```php
-get_artist_productions($artist_id, $args)
-get_artist_productions_with_dates($artist_id) // Sorted by opening date
-count_artist_productions($artist_id)
-```
-
-### Organized Display
-
-```php
-$credits = get_credits_by_group($production_id);
-// Returns: ['actor' => [...], 'designer' => [...], etc]
-```
-
-**Query Arguments:**
-
-- `role_group` (string) - Filter by role_group
-- `orderby` (string) - Default: 'menu_order title'
-- `order` (string) - ASC or DESC
-- `per_page` (int) - Default: 200
-- `count_only` (bool) - Return count only
-- `fields` (string) - 'ids' for ID-only results
-
-## Blocks
-
-Two custom Gutenberg blocks available:
-
-### Production Credits Block
-
-- **Name**: `theatrum-credits/production-credits`
-- **Used on**: Production pages
-- **Displays**: Cast and crew organized by role_group
-- **Context**: Uses `postId` and `postType` from block context
-- **Attribute**: `groupBy` (filter by specific role_group)
-
-### Artist Productions Block
-
-- **Name**: `theatrum-credits/artist-productions`
-- **Used on**: Artist pages
-- **Displays**: All productions artist has worked on
-- **Context**: Uses `postId` and `postType` from block context
-- **Attribute**: `sortBy` (date, date-asc, title)
-
-## File Structure
+Credits are rows in a custom table, not posts and not postmeta. Editors manage them through
+a React "Credits Manager" meta box on the Production edit screen, backed by REST endpoints —
+there is no ACF repeater field involved in day-to-day editing anymore.
 
 ```
 theatrum-credits/
-├── theatrum-credits.php              # Main plugin file
-├── models/
-│   └── credits.php                 # All query functions & auto-sync
+├── theatrum-credits.php        # Loader: table bootstrap, models, credit CPT (legacy),
+│                                # ACF fields (legacy), REST endpoints, admin list,
+│                                # block registration, Credits Manager meta box + enqueue
 ├── inc/
-│   ├── acf-fields.php              # ACF field group registration
-│   └── blocks.php                  # Block registration
-└── blocks/
-    ├── ProductionCredits/
-    │   ├── block.json              # Block config
-    │   ├── render.php              # Server-side render
-    │   └── index.js                # Block type registration
-    └── ArtistProductions/
-        ├── block.json
-        ├── render.php
-        └── index.js
+│   ├── table.php                # Creates/upgrades the ct_credits table (dbDelta, version-gated)
+│   ├── rest-endpoints.php       # /theatrum/v1/production-credits, /artist-credits, /credit/{id}
+│   ├── admin-list.php           # WP_List_Table admin view over ct_credits
+│   ├── credit.php               # Registers the legacy `credit` CPT (staging-only, see below)
+│   └── acf-fields.php           # Legacy ACF field group (kept for the save_post_credit
+│                                 # backwards-compat hook only — not used for new editing)
+├── models/
+│   └── credits.php              # All query functions; run directly against ct_credits
+├── src/
+│   ├── credits-manager/         # React meta box: CreditsManager.js, CreditRow.js
+│   └── blocks/
+│       ├── artist-credits/      # Frontend display block: theatrum/artist-credits
+│       └── production-credits/  # Frontend display block: theatrum/production-credits
+├── build/                       # Compiled output (blocks via wp-scripts, credits-manager via webpack)
+├── webpack.config.js            # wp-scripts default build config, for src/blocks
+├── webpack.credits-manager.js   # Separate webpack config for the meta box React app
+├── PLAN.md                      # 10-phase refactor plan (ACF repeater → ct_credits table)
+└── REFACTOR-NOTES.md            # Notes from the first (incomplete) migration attempt
 ```
+
+## Database
+
+`ct_credits` (created/upgraded by `inc/table.php`, version-gated via the
+`theatrum_credits_db_version` option):
+
+| Column | Type | Notes |
+|---|---|---|
+| `credit_ID` | bigint, PK, auto-increment | |
+| `credit_title` | varchar(255) | `"{Production} / {Artist}"`, auto-generated |
+| `credit_name` | varchar(255) | `sanitize_title($credit_title)` |
+| `credit_artist` | bigint | **Raw artist post ID** — see caveat below |
+| `credit_production` | bigint | Raw production post ID |
+| `credit_role` | varchar(255) | Free text, editor-entered |
+| `credit_role_group` | varchar(100) | One of `THEATRUM_CREDITS_VALID_ROLE_GROUPS` (see below) |
+| `credit_date` | varchar(20) | Copied from the production's `opening` ACF field at write time |
+| `credit_order` | int | Per-production display order |
+| `credit_created` / `credit_modified` | datetime | |
+
+**`credit_artist` is producer-role-only a known gap:** it's typed as an artist post ID, but
+producer/partner credits conceptually link to the `support` CPT, not `artist`. There is no
+`credit_entity_type` (or equivalent) column to disambiguate — this was flagged in
+`REFACTOR-NOTES.md` during the first migration attempt and was never resolved before the
+table shipped. See wp_root's documentation-cleanup follow-up list for this as a live issue.
+
+## Valid role groups
+
+Defined once, in `inc/rest-endpoints.php`'s `THEATRUM_CREDITS_VALID_ROLE_GROUPS`:
+`playwright`, `actor`, `director`, `choreographer`, `designer`, `producer`, `other`.
+Any REST write with a role group outside this list is rejected. (`stage_management` is
+**not** a valid role group, despite appearing in one code comment — see Blocks below.)
+
+## Query Functions (`models/credits.php`)
+
+All global scope, run directly against `ct_credits`, return arrays of `stdClass` row objects
+(not `WP_Query`):
+
+```php
+get_production_credits($production_id, $args)       // $args: role_group, count_only
+get_artist_productions($artist_id, $args)            // $args: role_group; ordered by credit_date DESC
+get_artist_productions_with_dates($artist_id)        // formatted array, not raw rows
+get_credits_by_group($production_id)                 // keyed by role_group
+count_artist_productions($artist_id)                 // distinct productions
+count_production_credits($production_id, $role_group)
+```
+
+## REST API (`inc/rest-endpoints.php`)
+
+All under `theatrum/v1`:
+
+| Route | Methods | Auth |
+|---|---|---|
+| `/production-credits/{post_id}` | GET, POST | GET public (already-public data only); POST requires `edit_posts` + `edit_post` on the production |
+| `/production-credits/{post_id}/reorder` | POST | `edit_posts` + `edit_post` on the production |
+| `/credit/{credit_id}` | PUT, DELETE | `edit_posts` + `edit_post` on the credit's production |
+| `/artist-credits/{post_id}` | GET | Public (already-public data only) |
+
+The Credits Manager meta box (`src/credits-manager/`) is the only consumer of the write
+endpoints; the GET endpoints also back the two frontend blocks' editor previews.
+
+## Blocks
+
+Two server-rendered display blocks, registered as `theatrum/artist-credits` and
+`theatrum/production-credits` (not `theatrum-credits/*` — the block namespace matches the
+site-wide `theatrum/` convention, not the plugin slug):
+
+- **`theatrum/artist-credits`** — used on artist pages; lists productions an artist worked on.
+- **`theatrum/production-credits`** — used on production pages; one block, 4 display modes via
+  the `roleGroup` attribute (`all` default, plus 3 registered variations): **Production Team**
+  (`team` — every role group *except* `actor` and `producer`), **Production Cast** (`cast` →
+  `actor` only), **Production Partners** (`partner` → `producer` only). See each block's own
+  README for attributes and markup.
 
 ## Data Flow
 
-1. **Edit Production**: Go to Production page → Edit "Cast & Crew" repeater
-2. **Save Production**: ACF save hook fires `sync_repeater_to_credits()`
-3. **Auto-create Credits**: `credit` posts created/updated with repeater data
-4. **Display on Frontend**: Use blocks or query functions to display
+1. Editor opens a Production post → the **Credits Manager** meta box (React, REST-backed)
+   loads existing rows via `GET /production-credits/{id}`.
+2. Adding/editing/removing/reordering a credit calls the matching REST endpoint directly —
+   each write lands in `ct_credits` immediately, no save-post hook involved.
+3. Frontend blocks query `ct_credits` via the model functions above at render time.
 
-## Future Extensions
+### Legacy backwards-compat path
 
-This plugin is designed to be extensible. Additional blocks can be added by:
+`models/credits.php` still registers a `save_post_credit` hook that syncs a `credit` CPT post
+(if one is edited directly) into `ct_credits`, keyed by a `_ct_credit_id` postmeta pointer.
+The `credit` CPT (`inc/credit.php`) and its ACF field group (`inc/acf-fields.php`) exist
+**only** to support this backwards-compat path — new credits should be created through the
+Credits Manager meta box, not by creating `credit` posts directly.
 
-1. Creating new folder in `blocks/`
-2. Adding `block.json`, `render.php`, `index.js`
-3. Registering in `inc/blocks.php`
+## Build & Development
 
-Possible additions:
-
-- Crew by Department filter block
-- Timeline of artist productions
-- Credits search/filter
-- Graphical cast view
+```bash
+npm run build            # build:blocks (wp-scripts) + build:manager (webpack)
+npm run build:blocks      # src/blocks/* → build/blocks/*
+npm run build:manager     # src/credits-manager/* → build/credits-manager/* (separate webpack config)
+npm run start:blocks      # watch mode, blocks only
+npm run start:manager     # watch mode, credits manager only
+```
 
 ## Dependencies
 
 - WordPress 5.0+
-- ACF Pro (for Repeater field type)
-- Custom post types: artist, production (must exist before plugin activation)
+- ACF Pro — only for the legacy `save_post_credit` backwards-compat path (see above); not
+  required for normal Credits Manager editing
+- Custom post types `artist` and `production` must exist before activation
 
-## Notes
+## History
 
-- All PHP functions use global scope (no namespaces)
-- Blocks are server-side rendered (dynamic blocks)
-- Auto-sync prevents orphaned credits when repeater rows are deleted
-- Credits are deleted permanently if removed from repeater
-
-# CUSTOM SQL TABLE REFACTORING
-
-Move this credit data to a custom table called `ct_credits`. All existing meta fields should be stored as columns instead. For example, columns could be:
-
-- `credit_ID` (primary key, auto-increment)
-- `credit_title` (Artist Name/Production Name, auto-generated from the title of the artist and production, with a "/" separator, e.g. "Hamlet/John Doe")
-- `credit_name` (sanitized title, may not be necessary because credits are not shown on the front end as individual posts, but it may be useful for debugging and data management)
-- `credit_artist` (`artist` or `supporter` post_ID, from the post_ID of the selected artist OR supporter in the repeater)
-- `credit_production` (production ID, auto add production ID from which the credit is created)
-- `credit_role` (string, input by user in repeater)
-- `credit_role_alt` (string, input by user in repeater, optional)
-- `credit_role_group` (string, input by user in repeater)
-- `credit_opening` (date, equal to production opening meta value)
-- `credit_order` (number, may not be necessary if production can have a field that is an array of credit_IDs that dictates the order in which they appear. The user should be able to easily change this order using the repeater field. Order is not needed for querying from artist block, those should be ordered by production opening date instead)
-
-This will improve query performance and simplify data management. The plugin should be refactored to use this custom table instead of post meta for credits. The auto-sync function will need to be updated to insert/update/delete rows in the `ct_credits` table instead of creating `credit` posts. Query functions will also need to be rewritten to query the custom table directly. I would also like to remove the individual credit ID values that are saved to the production. Instead, there should be one field on production posts that will be an array of credit ID's. This will allow for easier querying later. The credit ID can be generated as an auto-incrementing primary key in the custom table.
-
+This plugin originally stored credits as an ACF repeater field (`production_credits_repeater`)
+on production posts, auto-synced into a `credit` junction post type on save. `PLAN.md`
+documents the 10-phase migration to the current `ct_credits` custom-table design (better
+query performance, simpler data management, no per-repeater-row post overhead).
+`REFACTOR-NOTES.md` documents a first migration attempt that undercounted data (it only read
+existing `credit` posts, missing rows that lived solely in the ACF repeater) and flagged the
+producer/`support`-entity-type gap described above, which the shipped schema still doesn't
+address.

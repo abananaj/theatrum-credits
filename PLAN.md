@@ -166,14 +166,9 @@ Update both to query ct_credits directly via `$wpdb` (or via model functions).
 - Output `<ul class="artist-credits-ul">` with production title, role, year
 
 After editing: copy both render.php files to `build/blocks/`.
-stop not the same artist
 
 ---
 
-✅[41937](https://chancetheater.local/?artist=shinshin-tsai)
-✅[58462](https://chancetheater.local/?production=sanctuary)
-[55476](https://chancetheater.local/?artist=juliet-fischer)
-[58471](https://chancetheater.local/?production=jagged)
 ## Phase 6 — Credits Manager UI (React Meta Box)
 
 **New files:**
@@ -303,14 +298,3 @@ Do not proceed past Phase 5 without confirming the frontend blocks
 display correctly from ct_credits data.
 
 **Warning:** After Phase 3 removes the `sync_repeater_to_credits` hook, there is no write path for credits until the React meta box is live in Phase 6. Do not run Phase 3 on the production database without completing through Phase 6 in the same session.
-
-
-# skipped
-[60590](https://chancetheater.local/wp-admin/post.php?post=60590&action=edit)
-[60113](https://chancetheater.local/wp-admin/post.php?post=60113&action=edit)
-[44252](https://chancetheater.local/wp-admin/post.php?post=44252&action=edit)
-[60373](https://chancetheater.local/wp-admin/post.php?post=60373&action=edit)
-[60239](https://chancetheater.local/wp-admin/post.php?post=60239&action=edit)
-[60374](https://chancetheater.local/wp-admin/post.php?post=60374&action=edit)
-
-wp post list --post_type=credit --format=ids

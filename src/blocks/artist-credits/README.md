@@ -1,11 +1,12 @@
-# Artist Credits Block
+# Artist Credits Block (`theatrum/artist-credits`)
 
-Display a list of credits for artists working on a production. This block renders artist information from the production's associated meta data.
+Displays the productions an artist has worked on, on artist pages. Fetches via
+`GET /theatrum/v1/artist-credits/{post_id}`, which queries the `ct_credits` custom table
+(via `get_artist_productions()`) — not ACF fields.
 
 ## Key Features
 
-- Displays all artists associated with the current production
-- Renders as a formatted list of artist names and roles
-- Automatically pulls from production ACF fields
-- Reusable across different post types
+- Displays every production credited to the current artist
+- Renders as a formatted list of production titles and roles
+- Reusable across different post types (reads the current post as the artist context)
 - No configuration needed - works automatically with post context
