@@ -78,7 +78,7 @@ add_action('admin_enqueue_scripts', function () {
   wp_enqueue_script(
     'theatrum-credits-manager',
     THEATRUM_CREDITS_PLUGIN_URL . 'build/credits-manager/index.js',
-    $asset['dependencies'],
+    array_merge($asset['dependencies'], array('jquery', 'jquery-ui-sortable')),
     $asset['version'],
     true
   );

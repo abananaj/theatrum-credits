@@ -1,36 +1,145 @@
 .theatrum-credits-manager {
+  .credits-tabs {
+    .components-tab-panel__tabs {
+      margin-bottom: 12px;
+    }
+
+    // WP's TabPanel calls .focus() on the tab programmatically when it's
+    // selected, so its ::before focus-visible ring (a box-shadow box around
+    // the label) shows up even on a plain mouse click, not just keyboard
+    // nav — sitting right above the ::after active-tab underline bar and
+    // reading as a redundant "double underline". Keep only the underline.
+    .components-tab-panel__tabs-item {
+      outline: none !important;
+
+      &::before {
+        box-shadow: none !important;
+      }
+
+      // The active-tab underline (::after) has `transition: all 0.1s linear`
+      // in core, and `.is-active::after` adds `outline: 2px solid transparent`.
+      // Because the transition is `all`, outline-color animates too — from
+      // its default (black) toward transparent — rendering as a solid black
+      // bar under the underline for that ~100ms. Confirmed on video. Scope
+      // the transition to height only and kill the outline outright.
+      &::after {
+        outline: none !important;
+        transition: height 0.1s linear !important;
+      }
+    }
+  }
+
   .credits-list {
     margin-bottom: 12px;
   }
 
+  .credit-row-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+
+    &.ui-sortable-helper .credit-row {
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      cursor: grabbing;
+    }
+
+    .credit-row-delete {
+      flex: 0 0 auto;
+      opacity: 0;
+      transition: opacity 0.1s ease-in-out;
+    }
+
+    &:hover .credit-row-delete,
+    &:focus-within .credit-row-delete {
+      opacity: 1;
+    }
+  }
+
   .credit-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
     border: 1px solid #ddd;
     border-radius: 4px;
     padding: 8px;
-    margin-bottom: 8px;
     background: #f9f9f9;
 
-    .credit-row-fields {
+    .credit-row-drag-handle {
       display: flex;
-      flex-direction: column;
-      gap: 4px;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      width: 24px;
+      height: 30px;
+      color: #757575;
+      cursor: grab;
+      user-select: none;
 
-      .components-base-control {
-        margin-bottom: 0;
+      &:active {
+        cursor: grabbing;
       }
     }
 
-    .credit-row-actions {
-      display: flex;
-      gap: 4px;
-      margin-top: 8px;
-      justify-content: flex-end;
+    .credit-row-body {
+      flex: 1;
+      min-width: 0;
     }
+
+    .credit-row-fields {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 8px;
+
+      > * {
+        flex: 1 1 0;
+        width: 0;
+        min-width: 0;
+        margin-bottom: 0;
+      }
+
+      // ComboboxControl renders its suggestions list as a normal flex child
+      // (unlike SelectControl's native <select>, which pops up without
+      // affecting layout), so left alone it grows the row taller. Take it
+      // out of flow and overlay it instead, anchored to its own container.
+      .components-combobox-control__suggestions-container {
+        position: relative;
+      }
+
+      .components-form-token-field__suggestions-list {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        z-index: 20;
+        background: #fff;
+        border: 1px solid #949494;
+        border-top: none;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      }
+    }
+  }
+
+  .credit-row-placeholder {
+    border: 1px dashed #bbb;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    background: #f0f0f0;
   }
 
   .credits-actions {
     display: flex;
-    justify-content: space-between;
     margin-top: 4px;
+  }
+
+  .credits-save-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid #ddd;
   }
 }

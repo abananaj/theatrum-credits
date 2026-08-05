@@ -5,7 +5,7 @@ if (! defined('ABSPATH')) {
 }
 
 define('THEATRUM_CREDITS_VALID_ROLE_GROUPS', array(
-  'playwright', 'actor', 'director', 'choreographer', 'designer', 'producer', 'other',
+  'actor', 'creative_team', 'producer',
 ));
 
 function theatrum_credits_editor_permission_check()
@@ -49,6 +49,52 @@ function theatrum_credits_format_row_for_editor($row)
     'role_group'       => $row->credit_role_group,
     'order'            => (int) $row->credit_order,
   );
+}
+
+/* -----------------------------------------------------------------------
+ * Producer meta sync — mirrors producer credits onto the production post
+ * as postmeta (role => post ID, or an array of post IDs when more than
+ * one producer shares the same role), kept in sync on create/update/delete.
+ * -------------------------------------------------------------------- */
+
+function theatrum_credits_producer_meta_key($role, $role_group)
+{
+  $role = trim((string) $role);
+  return $role !== '' ? $role : $role_group;
+}
+
+function theatrum_credits_add_producer_meta($production_id, $role, $role_group, $artist_id)
+{
+  $key      = theatrum_credits_producer_meta_key($role, $role_group);
+  $existing = get_post_meta($production_id, $key, true);
+
+  $ids = $existing === '' ? array() : (is_array($existing) ? $existing : array($existing));
+  $ids = array_map('intval', $ids);
+
+  if (! in_array((int) $artist_id, $ids, true)) {
+    $ids[] = (int) $artist_id;
+  }
+
+  update_post_meta($production_id, $key, count($ids) === 1 ? $ids[0] : array_values($ids));
+}
+
+function theatrum_credits_remove_producer_meta($production_id, $role, $role_group, $artist_id)
+{
+  $key      = theatrum_credits_producer_meta_key($role, $role_group);
+  $existing = get_post_meta($production_id, $key, true);
+
+  if ($existing === '') {
+    return;
+  }
+
+  $ids = is_array($existing) ? $existing : array($existing);
+  $ids = array_values(array_diff(array_map('intval', $ids), array((int) $artist_id)));
+
+  if (empty($ids)) {
+    delete_post_meta($production_id, $key);
+  } else {
+    update_post_meta($production_id, $key, count($ids) === 1 ? $ids[0] : $ids);
+  }
 }
 
 /* -----------------------------------------------------------------------
@@ -130,6 +176,10 @@ function theatrum_credits_create_credit_callback($request)
 
   if (! $inserted) {
     return new WP_Error('insert_failed', 'Failed to create credit.', array('status' => 500));
+  }
+
+  if ($role_group === 'producer') {
+    theatrum_credits_add_producer_meta($production_id, $role, $role_group, $artist_id);
   }
 
   $new_row = theatrum_credits_get_row((int) $wpdb->insert_id);
@@ -250,6 +300,13 @@ function theatrum_credits_update_credit_callback($request)
     array('%d')
   );
 
+  if ($row->credit_role_group === 'producer') {
+    theatrum_credits_remove_producer_meta((int) $row->credit_production, $row->credit_role, $row->credit_role_group, (int) $row->credit_artist);
+  }
+  if ($role_group === 'producer') {
+    theatrum_credits_add_producer_meta((int) $row->credit_production, $role, $role_group, $artist_id);
+  }
+
   return new WP_REST_Response(theatrum_credits_format_row_for_editor(theatrum_credits_get_row($credit_id)), 200);
 }
 
@@ -271,6 +328,10 @@ function theatrum_credits_delete_credit_callback($request)
 
   if (! $deleted) {
     return new WP_Error('delete_failed', 'Failed to delete credit.', array('status' => 500));
+  }
+
+  if ($row->credit_role_group === 'producer') {
+    theatrum_credits_remove_producer_meta((int) $row->credit_production, $row->credit_role, $row->credit_role_group, (int) $row->credit_artist);
   }
 
   return new WP_REST_Response(array('deleted' => true, 'id' => $credit_id), 200);

@@ -1,11 +1,41 @@
-import { useState, useEffect, useCallback } from '@wordpress/element';
-import { Button, Notice, Spinner } from '@wordpress/components';
+import { useState, useEffect, useCallback, useRef } from '@wordpress/element';
+import { Button, Notice, Spinner, TabPanel } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
 import apiFetch from '@wordpress/api-fetch';
 import CreditRow from './CreditRow';
 
 let _localIdCounter = 0;
 const newLocalId = () => `new-${++_localIdCounter}`;
+
+const TABS = [
+  { name: 'cast', title: 'Cast' },
+  { name: 'creative', title: 'Creative Team' },
+  { name: 'producers', title: 'Producers' },
+];
+
+const DEFAULT_ROLE_GROUP_BY_TAB = {
+  cast: 'actor',
+  producers: 'producer',
+  creative: 'creative_team',
+};
+
+function rowMatchesTab(row, tabName) {
+  if (tabName === 'cast') return row.role_group === 'actor';
+  if (tabName === 'producers') return row.role_group === 'producer';
+  // Catches legacy rows saved under the old, more granular role groups
+  // (playwright, director, choreographer, designer, other) as well as the
+  // current 'creative_team' value — anything that isn't Cast or Producers.
+  return row.role_group !== 'actor' && row.role_group !== 'producer';
+}
+
+// The Role Group field is no longer user-editable — it's implied by whichever
+// tab a credit lives in. Normalizes old per-role values (director, designer,
+// etc., no longer in THEATRUM_CREDITS_VALID_ROLE_GROUPS) to 'creative_team'
+// so editing a pre-existing legacy-grouped credit doesn't fail validation.
+function canonicalRoleGroupForRow(row) {
+  if (row.role_group === 'actor' || row.role_group === 'producer') return row.role_group;
+  return 'creative_team';
+}
 
 function rowFromApi(credit) {
   return {
@@ -28,6 +58,9 @@ export default function CreditsManager() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [notice, setNotice] = useState(null);
+  const [activeTab, setActiveTab] = useState('cast');
+  const listRef = useRef(null);
+  const pendingOrderRef = useRef(null);
 
   const loadCredits = useCallback(() => {
     if (!postId) return;
@@ -60,14 +93,14 @@ export default function CreditsManager() {
         artist_id: 0,
         artist_title: '',
         role: '',
-        role_group: 'actor',
+        role_group: DEFAULT_ROLE_GROUP_BY_TAB[activeTab],
         order: maxOrder + 1,
         isNew: true,
         isDirty: false,
         _deleted: false,
       },
     ]);
-  }, [rows]);
+  }, [rows, activeTab]);
 
   const removeRow = useCallback((localId) => {
     setRows((prev) => {
@@ -78,16 +111,40 @@ export default function CreditsManager() {
     });
   }, []);
 
-  const moveRow = useCallback((localId, direction) => {
+  // Rows are displayed one tab at a time, but saved as a single ordered list
+  // (credit_order is shared across all role groups for a production). Dragging
+  // within a tab only reorders that tab's rows relative to each other —
+  // `tabLocalIds` is the pre-drag order of local IDs for the active tab, used
+  // to find where the dragged row's new tab-relative neighbor sits in the
+  // full list, so other tabs' rows are left untouched in between.
+  const moveRowToIndex = useCallback((localId, toIndex, tabLocalIds) => {
     setRows((prev) => {
-      const visible = prev.filter((r) => !r._deleted);
-      const idx = visible.findIndex((r) => r._localId === localId);
-      const newIdx = idx + direction;
-      if (newIdx < 0 || newIdx >= visible.length) return prev;
-      const reordered = [...visible];
-      [reordered[idx], reordered[newIdx]] = [reordered[newIdx], reordered[idx]];
       const deleted = prev.filter((r) => r._deleted);
-      return [...reordered, ...deleted];
+      const rest = prev.filter((r) => !r._deleted);
+
+      const fromIndex = rest.findIndex((r) => r._localId === localId);
+      if (fromIndex === -1) return prev;
+
+      const [dragged] = rest.splice(fromIndex, 1);
+
+      const otherTabIds = tabLocalIds.filter((id) => id !== localId);
+      const beforeLocalId = otherTabIds[toIndex];
+
+      let insertAt;
+      if (beforeLocalId != null) {
+        insertAt = rest.findIndex((r) => r._localId === beforeLocalId);
+        if (insertAt === -1) insertAt = rest.length;
+      } else {
+        const otherTabIdSet = new Set(otherTabIds);
+        let lastTabIndex = -1;
+        rest.forEach((r, i) => {
+          if (otherTabIdSet.has(r._localId)) lastTabIndex = i;
+        });
+        insertAt = lastTabIndex === -1 ? rest.length : lastTabIndex + 1;
+      }
+
+      rest.splice(insertAt, 0, dragged);
+      return [...rest, ...deleted];
     });
   }, []);
 
@@ -127,7 +184,7 @@ export default function CreditsManager() {
           const result = await apiFetch({
             path: `/theatrum/v1/production-credits/${postId}`,
             method: 'POST',
-            data: { artist: r.artist_id, role_group: r.role_group, role: r.role },
+            data: { artist: r.artist_id, role_group: canonicalRoleGroupForRow(r), role: r.role },
           });
           createdIds[r._localId] = result.id;
         })
@@ -138,7 +195,7 @@ export default function CreditsManager() {
           apiFetch({
             path: `/theatrum/v1/credit/${r.id}`,
             method: 'PUT',
-            data: { artist: r.artist_id, role_group: r.role_group, role: r.role },
+            data: { artist: r.artist_id, role_group: canonicalRoleGroupForRow(r), role: r.role },
           })
         )
       );
@@ -164,6 +221,48 @@ export default function CreditsManager() {
     }
   }, [postId, rows, loadCredits]);
 
+  const visibleRows = rows.filter((r) => !r._deleted && rowMatchesTab(r, activeTab));
+  const rowsKey = visibleRows.map((r) => r._localId).join(',');
+
+  // jQuery UI Sortable — same library ACF's repeater uses for drag-to-reorder.
+  // `update` captures the drop target from the DOM; `stop` immediately cancels
+  // jQuery's own DOM move so React's key-based re-render is the only thing
+  // that actually reorders the rows (avoids the two fighting over the DOM).
+  useEffect(() => {
+    const $ = window.jQuery;
+    if (!$ || !$.fn.sortable || !listRef.current) return undefined;
+
+    const $list = $(listRef.current);
+    const tabLocalIds = visibleRows.map((r) => r._localId);
+
+    $list.sortable({
+      handle: '.credit-row-drag-handle',
+      items: '> .credit-row-wrapper',
+      axis: 'y',
+      tolerance: 'pointer',
+      placeholder: 'credit-row-placeholder',
+      forcePlaceholderSize: true,
+      update(event, ui) {
+        const localId = ui.item.data('local-id');
+        const newIndex = ui.item.index();
+        pendingOrderRef.current = localId != null ? { localId: String(localId), newIndex } : null;
+      },
+      stop() {
+        $list.sortable('cancel');
+        if (pendingOrderRef.current) {
+          moveRowToIndex(pendingOrderRef.current.localId, pendingOrderRef.current.newIndex, tabLocalIds);
+          pendingOrderRef.current = null;
+        }
+      },
+    });
+
+    return () => {
+      if ($list.hasClass('ui-sortable')) {
+        $list.sortable('destroy');
+      }
+    };
+  }, [activeTab, rowsKey, moveRowToIndex]);
+
   if (!postId) {
     return <p style={{ color: '#757575', fontStyle: 'italic' }}>Save the post first to manage credits.</p>;
   }
@@ -171,8 +270,6 @@ export default function CreditsManager() {
   if (isLoading) {
     return <Spinner />;
   }
-
-  const visibleRows = rows.filter((r) => !r._deleted);
 
   return (
     <div className="theatrum-credits-manager">
@@ -182,29 +279,34 @@ export default function CreditsManager() {
         </Notice>
       )}
 
-      {visibleRows.length === 0 && (
-        <p style={{ color: '#757575', fontStyle: 'italic', margin: '0 0 8px' }}>No credits yet.</p>
-      )}
+      <TabPanel className="credits-tabs" tabs={TABS} onSelect={setActiveTab}>
+        {() => (
+          <>
+            {visibleRows.length === 0 && (
+              <p style={{ color: '#757575', fontStyle: 'italic', margin: '8px 0' }}>No credits yet.</p>
+            )}
 
-      <div className="credits-list">
-        {visibleRows.map((row, idx) => (
-          <CreditRow
-            key={row._localId}
-            row={row}
-            isFirst={idx === 0}
-            isLast={idx === visibleRows.length - 1}
-            onChange={(updates) => updateRow(row._localId, updates)}
-            onDelete={() => removeRow(row._localId)}
-            onMoveUp={() => moveRow(row._localId, -1)}
-            onMoveDown={() => moveRow(row._localId, 1)}
-          />
-        ))}
-      </div>
+            <div className="credits-list" ref={listRef}>
+              {visibleRows.map((row) => (
+                <CreditRow
+                  key={row._localId}
+                  row={row}
+                  onChange={(updates) => updateRow(row._localId, updates)}
+                  onDelete={() => removeRow(row._localId)}
+                />
+              ))}
+            </div>
 
-      <div className="credits-actions">
-        <Button variant="secondary" onClick={addRow} icon="plus">
-          Add Credit
-        </Button>
+            <div className="credits-actions">
+              <Button variant="secondary" onClick={addRow} icon="plus">
+                Add Credit
+              </Button>
+            </div>
+          </>
+        )}
+      </TabPanel>
+
+      <div className="credits-save-actions">
         <Button variant="primary" onClick={saveCredits} isBusy={isSaving} disabled={isSaving}>
           Save Credits
         </Button>
