@@ -4,6 +4,7 @@
   "scripts": {
     "build:blocks": "wp-scripts build",
     "build:manager": "webpack --config webpack.credits-manager.js",
+    "build:watch": "webpack --config webpack.credits-manager.js --watch",
     "build": "npm run build:blocks && npm run build:manager",
     "start:blocks": "wp-scripts start",
     "start:manager": "webpack --config webpack.credits-manager.js --watch --mode development"

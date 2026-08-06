@@ -3,7 +3,7 @@
   "apiVersion": 3,
   "name": "theatrum/production-credits",
   "title": "Production Credits",
-  "category": "widgets",
+  "category": "production",
   "description": "Display a list of artists credited for a production",
   "textdomain": "production-credits",
   "icon": "list-view",
