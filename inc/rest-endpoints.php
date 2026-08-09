@@ -60,7 +60,11 @@ function theatrum_credits_format_row_for_editor($row)
 function theatrum_credits_producer_meta_key($role, $role_group)
 {
   $role = trim((string) $role);
-  return $role !== '' ? $role : $role_group;
+  $key  = $role !== '' ? $role : $role_group;
+  $key  = strtolower($key);
+  $key  = preg_replace('/[^a-z0-9]+/', '_', $key);
+  $key  = trim($key, '_');
+  return $key !== '' ? $key : $role_group;
 }
 
 function theatrum_credits_add_producer_meta($production_id, $role, $role_group, $artist_id)
