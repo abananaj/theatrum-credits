@@ -55,21 +55,41 @@ function theatrum_credits_format_row_for_editor($row)
  * Producer meta sync — mirrors producer credits onto the production post
  * as postmeta (role => post ID, or an array of post IDs when more than
  * one producer shares the same role), kept in sync on create/update/delete.
+ *
+ * Only these 4 production-scoped roles are synced. Season-level roles
+ * (Season Producers, Associate/Executive Season Producers, OTR Season
+ * Producer, etc.) are entered per-production in ct_credits but display via
+ * the season term's meta, not the production post — they must never be
+ * written here. Role text is matched case/punctuation-insensitively so
+ * plural and near-duplicate spellings collapse onto the same canonical key.
  * -------------------------------------------------------------------- */
+
+define('THEATRUM_CREDITS_PRODUCER_META_MAP', array(
+  'executive producer'  => 'executive_producer',
+  'executive producers' => 'executive_producer',
+  'associate producer'  => 'associate_producer',
+  'associate producers' => 'associate_producer',
+  'assoc producers'     => 'associate_producer',
+  'corporate sponsor'   => 'corporate_sponsor',
+  'supporting producer' => 'supporting_producer',
+));
 
 function theatrum_credits_producer_meta_key($role, $role_group)
 {
   $role = trim((string) $role);
-  $key  = $role !== '' ? $role : $role_group;
-  $key  = strtolower($key);
-  $key  = preg_replace('/[^a-z0-9]+/', '_', $key);
-  $key  = trim($key, '_');
-  return $key !== '' ? $key : $role_group;
+  $role = strtolower($role);
+  $role = preg_replace('/[^a-z0-9]+/', ' ', $role);
+  $role = trim($role);
+
+  return isset(THEATRUM_CREDITS_PRODUCER_META_MAP[$role]) ? THEATRUM_CREDITS_PRODUCER_META_MAP[$role] : false;
 }
 
 function theatrum_credits_add_producer_meta($production_id, $role, $role_group, $artist_id)
 {
-  $key      = theatrum_credits_producer_meta_key($role, $role_group);
+  $key = theatrum_credits_producer_meta_key($role, $role_group);
+  if (! $key) {
+    return;
+  }
   $existing = get_post_meta($production_id, $key, true);
 
   $ids = $existing === '' ? array() : (is_array($existing) ? $existing : array($existing));
@@ -84,7 +104,10 @@ function theatrum_credits_add_producer_meta($production_id, $role, $role_group, 
 
 function theatrum_credits_remove_producer_meta($production_id, $role, $role_group, $artist_id)
 {
-  $key      = theatrum_credits_producer_meta_key($role, $role_group);
+  $key = theatrum_credits_producer_meta_key($role, $role_group);
+  if (! $key) {
+    return;
+  }
   $existing = get_post_meta($production_id, $key, true);
 
   if ($existing === '') {
