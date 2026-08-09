@@ -54,7 +54,10 @@ $item_width         = isset($attributes['itemWidth']) && preg_match($css_length_
 
 $flex_style = sprintf('justify-content: %s; align-items: %s; --credit-width: %s;', $justify_content, $align_items, $item_width);
 
-$html = '<ul class="production-credits-ul" style="' . esc_attr($flex_style) . '">';
+$wrapper_attributes = get_block_wrapper_attributes();
+
+$html = '<div ' . $wrapper_attributes . '>';
+$html .= '<ul class="production-credits-ul" style="' . esc_attr($flex_style) . '">';
 
 foreach ($credits as $row) {
   $artist_id    = (int) $row->credit_artist;
@@ -81,5 +84,6 @@ foreach ($credits as $row) {
 }
 
 $html .= '</ul>';
+$html .= '</div>';
 
 echo $html;

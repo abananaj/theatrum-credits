@@ -12,7 +12,7 @@ export default function CreditRow({ row, onChange, onDelete }) {
 
   function searchArtists(filterValue) {
     if (filterValue.length < 2) return;
-    const subtype = row.role_group === 'producer' ? 'support' : 'artist';
+    const subtype = row.role_group === 'producer' ? 'supporter' : 'artist';
     apiFetch({
       path: `/wp/v2/search?search=${encodeURIComponent(filterValue)}&type=post&subtype=${subtype}&per_page=20&_fields=id,title`,
     })
@@ -28,7 +28,7 @@ export default function CreditRow({ row, onChange, onDelete }) {
         <div className="credit-row-body">
           <div className="credit-row-fields">
             <ComboboxControl
-              label="Artist"
+              label={row.role_group === 'producer' ? 'Supporter' : 'Artist'}
               value={row.artist_id || null}
               onChange={(value) => {
                 const option = artistOptions.find((o) => o.value === value);

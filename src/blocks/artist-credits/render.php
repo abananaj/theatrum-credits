@@ -59,4 +59,8 @@ foreach ($credits as $row) {
   $items[] = $item;
 }
 
+$wrapper_attributes = get_block_wrapper_attributes();
+
+echo '<div ' . $wrapper_attributes . '>';
 echo '<ul class="artist-credits-ul" style="' . esc_attr($flex_style) . '">' . implode('', $items) . '</ul>';
+echo '</div>';
