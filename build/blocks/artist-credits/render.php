@@ -14,7 +14,7 @@ if (! $post_id) {
   return;
 }
 
-$credits = get_artist_productions($post_id);
+$credits = theatrum_credits_get_artist_productions($post_id);
 
 if (empty($credits)) {
   return;

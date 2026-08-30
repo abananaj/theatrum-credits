@@ -14,7 +14,7 @@
  * @param array $args  role_group (string), count_only (bool)
  * @return array|int   Array of row objects, or int when count_only is true
  */
-function get_production_credits($production_id, $args = array())
+function theatrum_credits_get_production_credits($production_id, $args = array())
 {
   global $wpdb;
 
@@ -63,7 +63,7 @@ function get_production_credits($production_id, $args = array())
  * @param array $args  role_group (string)
  * @return array  Array of row objects
  */
-function get_artist_productions($artist_id, $args = array())
+function theatrum_credits_get_artist_productions($artist_id, $args = array())
 {
   global $wpdb;
 
@@ -94,9 +94,9 @@ function get_artist_productions($artist_id, $args = array())
  * @param int $production_id
  * @return array  Keyed by role_group string
  */
-function get_credits_by_group($production_id)
+function theatrum_credits_get_credits_by_group($production_id)
 {
-  $credits    = get_production_credits($production_id);
+  $credits    = theatrum_credits_get_production_credits($production_id);
   $organized  = array();
 
   foreach ($credits as $row) {
@@ -126,9 +126,9 @@ function get_credits_by_group($production_id)
  * @param int $artist_id
  * @return array
  */
-function get_artist_productions_with_dates($artist_id)
+function theatrum_credits_get_artist_productions_with_dates($artist_id)
 {
-  $credits     = get_artist_productions($artist_id);
+  $credits     = theatrum_credits_get_artist_productions($artist_id);
   $productions = array();
 
   foreach ($credits as $row) {
@@ -152,7 +152,7 @@ function get_artist_productions_with_dates($artist_id)
  * @param int $artist_id
  * @return int
  */
-function count_artist_productions($artist_id)
+function theatrum_credits_count_artist_productions($artist_id)
 {
   global $wpdb;
 
@@ -169,9 +169,9 @@ function count_artist_productions($artist_id)
  * @param string $role_group
  * @return int
  */
-function count_production_credits($production_id, $role_group = '')
+function theatrum_credits_count_production_credits($production_id, $role_group = '')
 {
-  return get_production_credits($production_id, array(
+  return theatrum_credits_get_production_credits($production_id, array(
     'role_group' => $role_group,
     'count_only' => true,
   ));

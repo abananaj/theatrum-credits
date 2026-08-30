@@ -21,11 +21,11 @@ if (! $post_id) {
 $team_exclude = array('actor', 'producer');
 
 if ('cast' === $role_group) {
-  $credits = get_production_credits($post_id, array('role_group' => 'actor'));
+  $credits = theatrum_credits_get_production_credits($post_id, array('role_group' => 'actor'));
 } elseif ('partner' === $role_group) {
-  $credits = get_production_credits($post_id, array('role_group' => 'producer'));
+  $credits = theatrum_credits_get_production_credits($post_id, array('role_group' => 'producer'));
 } else {
-  $credits = get_production_credits($post_id);
+  $credits = theatrum_credits_get_production_credits($post_id);
   if ('team' === $role_group) {
     $credits = array_filter($credits, function ($row) use ($team_exclude) {
       return ! in_array($row->credit_role_group, $team_exclude, true);

@@ -149,7 +149,7 @@ add_action('rest_api_init', function () {
 function theatrum_credits_get_production_credits_callback($request)
 {
   $production_id = intval($request['post_id']);
-  $rows          = get_production_credits($production_id);
+  $rows          = theatrum_credits_get_production_credits($production_id);
   $output        = array_map('theatrum_credits_format_row_for_editor', $rows);
 
   return new WP_REST_Response(array('credits' => $output), 200);
@@ -382,7 +382,7 @@ add_action('rest_api_init', function () {
 function theatrum_credits_get_artist_credits_callback($request)
 {
   $artist_id = intval($request['post_id']);
-  $rows      = get_artist_productions($artist_id);
+  $rows      = theatrum_credits_get_artist_productions($artist_id);
   $output    = array();
 
   foreach ($rows as $row) {
