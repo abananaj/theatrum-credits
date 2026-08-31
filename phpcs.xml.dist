@@ -65,6 +65,30 @@
 		<exclude name="PEAR.Functions.FunctionCallSignature.SpaceAfterOpenBracket"/>
 		<exclude name="PEAR.Functions.FunctionCallSignature.SpaceBeforeCloseBracket"/>
 		<exclude name="WordPress.WhiteSpace.ControlStructureSpacing"/>
+
+		<!-- DEVIATION (approved 2026-08-31, batch 2): the same no-inner-padding
+		     convention above also covers function *declarations*, logical/
+		     grouping parens, and array-literal brackets — sniffs the original
+		     pass didn't think to check. Confirmed by direct grep sampling
+		     across all of wp-content, not sniff count: the padded counter-form
+		     (`function \w+\( \$`, `if \( \$`, etc.) appears nowhere in any of
+		     the 5 audited submodules — only in the unrelated wprig/ollie
+		     legacy parent-theme folders. ~1,436 findings, 20% of the pre-batch-2
+		     total. Two other candidates from the same breakdown were checked
+		     and explicitly rejected, not just skipped — do not re-add without
+		     new evidence: WordPress.WhiteSpace.OperatorSpacing on `!` (mixed —
+		     chance-ollie/inc/legacy-shortcodes/index.php:29 has `!defined(...)`
+		     with zero spaces while most files use `! defined(...)`), and
+		     Generic.Functions.OpeningFunctionBraceKernighanRitchie.BraceOnNewLine
+		     (mixed even within chance-ollie — inc/metadata/{block-bindings,
+		     filter-by,order-by}.php use same-line braces, most other files
+		     don't). -->
+		<exclude name="Squiz.Functions.FunctionDeclarationArgumentSpacing.SpacingAfterOpen"/>
+		<exclude name="Squiz.Functions.FunctionDeclarationArgumentSpacing.SpacingBeforeClose"/>
+		<exclude name="Generic.WhiteSpace.ArbitraryParenthesesSpacing.SpaceAfterOpen"/>
+		<exclude name="Generic.WhiteSpace.ArbitraryParenthesesSpacing.SpaceBeforeClose"/>
+		<exclude name="NormalizedArrays.Arrays.ArrayBraceSpacing.SpaceAfterArrayOpenerSingleLine"/>
+		<exclude name="NormalizedArrays.Arrays.ArrayBraceSpacing.SpaceBeforeArrayCloserSingleLine"/>
 	</rule>
 
 	<!-- Explicit, not redundant: WordPress.Security.ValidatedSanitizedInput is in
