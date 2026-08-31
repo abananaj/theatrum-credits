@@ -1,0 +1,24 @@
+{
+	"name": "abananaj/theatrum-credits",
+	"description": "PHPCS/WPCS toolchain for theatrum-credits, rendered from .audit/config/composer.template.json — do not edit require-dev by hand, run .build/sh/audit.sh sync.",
+	"type": "project",
+	"license": "proprietary",
+	"require-dev": {
+		"php": ">=7.2",
+		"wp-coding-standards/wpcs": "^3.4",
+		"squizlabs/php_codesniffer": "^3.13.5",
+		"phpcsstandards/phpcsutils": "^1.2.3",
+		"phpcsstandards/phpcsextra": "^1.5.1",
+		"phpcompatibility/phpcompatibility-wp": "^2.1",
+		"dealerdirect/phpcodesniffer-composer-installer": "^1.0"
+	},
+	"config": {
+		"allow-plugins": {
+			"dealerdirect/phpcodesniffer-composer-installer": true
+		}
+	},
+	"scripts": {
+		"lint": "phpcs",
+		"fix": "phpcbf"
+	}
+}

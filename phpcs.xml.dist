@@ -1,0 +1,89 @@
+<?xml version="1.0"?>
+<!--
+  Canonical PHPCS ruleset for all five Chance Theater submodules.
+  DO NOT EDIT THE RENDERED phpcs.xml.dist IN A SUBMODULE — edit this file and
+  run `.build/sh/audit.sh sync`. A run's `crosscheck` reports drift between
+  this template and each submodule's rendered copy.
+
+  Tokens substituted by sync: SLUG, TEXTDOMAIN, PREFIXES_XML, TEST_VERSION, MIN_WP
+  (not written double-braced here on purpose — this file is itself a sync
+  target, and str_replace would eat a literal token placeholder in this
+  comment same as the real ones below).
+  See .audit/config/DEVIATIONS.md for why the exclusions below exist, and
+  GLOBAL_REVIEW.md Part 1 for the standards research behind every choice here.
+-->
+<ruleset name="theatrum-credits">
+	<description>WordPress coding standards for theatrum-credits, rendered from .audit/config/phpcs.template.xml</description>
+
+	<file>.</file>
+
+	<arg name="extensions" value="php"/>
+	<arg name="colors"/>
+	<arg value="sp"/>
+
+	<exclude-pattern>*/vendor/*</exclude-pattern>
+	<exclude-pattern>*/node_modules/*</exclude-pattern>
+	<exclude-pattern>*/build/*</exclude-pattern>
+	<exclude-pattern>*/dist/*</exclude-pattern>
+	<exclude-pattern>*/.build/*</exclude-pattern>
+
+	<!-- WordPress = WordPress-Docs + WordPress-Extra (which includes WordPress-Core),
+	     minus WordPress.PHP.POSIXFunctions. Verified against the ruleset XML directly
+	     2026-08-28 (GLOBAL_REVIEW.md §1a) — this is the official, complete standard. -->
+	<rule ref="WordPress">
+		<!-- DEVIATION (approved 2026-08-28, GLOBAL_REVIEW.md §1c/§4b): repo-wide
+		     short array syntax. Not supported by the handbook (which mandates long
+		     array() syntax with no documented exception) but every submodule uses
+		     short syntax throughout; enforcing this now would bury every real
+		     finding under a mechanical reformat. Re-measured via audit.sh's
+		     deviations mode (not written as a literal flag name here — a
+		     double hyphen inside an XML comment body is invalid XML). -->
+		<exclude name="Universal.Arrays.DisallowShortArraySyntax"/>
+
+		<!-- DEVIATION (approved 2026-08-28): PHP indentation is space-dominant in
+		     all five modules (theme 4-space, everyone else 2-space) despite the
+		     handbook mandating real tabs. Same rationale as above. -->
+		<exclude name="Generic.WhiteSpace.DisallowSpaceIndent"/>
+		<exclude name="Generic.WhiteSpace.ScopeIndent"/>
+		<exclude name="WordPress.Arrays.ArrayIndentation"/>
+		<!-- Lives under Universal in WPCS 3.4.1, not WordPress — verified
+		     2026-08-30 against WordPress-Core/ruleset.xml directly after
+		     the plain "WordPress.WhiteSpace.PrecisionAlignment" name (the
+		     pre-3.x location) turned out not to exist and broke phpcs -e. -->
+		<exclude name="Universal.WhiteSpace.PrecisionAlignment"/>
+	</rule>
+
+	<!-- Explicit, not redundant: WordPress.Security.ValidatedSanitizedInput is in
+	     NEITHER WordPress-Core NOR WordPress-Extra (verified 2026-08-28 against
+	     ruleset.xml directly — GLOBAL_REVIEW.md §1b/C1). This is the sniff that
+	     catches missing wp_unslash() before sanitize_*(), the single most-cited
+	     security finding across the five per-submodule reviews. Without this
+	     explicit <rule ref>, the shared ruleset would silently fail to detect its
+	     own headline finding. -->
+	<rule ref="WordPress.Security.ValidatedSanitizedInput"/>
+
+	<!-- Also absent from Core/Extra; ADMIN_REVIEW.md's audit plan relies on it. -->
+	<rule ref="WordPress.DB.DirectDatabaseQuery"/>
+
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="theatrum-credits"/>
+			</property>
+		</properties>
+	</rule>
+
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<properties>
+			<property name="prefixes" type="array">
+				<element value="theatrum_credits_"/>
+				<element value="ct_"/>
+			</property>
+		</properties>
+	</rule>
+
+	<config name="testVersion" value="8.2-"/>
+	<rule ref="PHPCompatibilityWP"/>
+
+	<config name="minimum_wp_version" value="7.1"/>
+</ruleset>
