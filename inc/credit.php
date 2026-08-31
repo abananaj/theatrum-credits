@@ -1,5 +1,9 @@
 <?php
 
+if (! defined('ABSPATH')) {
+  exit;
+}
+
 /**
  * Register Credit Post Types
  */
