@@ -21,7 +21,8 @@ function theatrum_credits_get_row($credit_id)
 {
   global $wpdb;
   return $wpdb->get_row($wpdb->prepare(
-    "SELECT * FROM " . THEATRUM_CREDITS_TABLE . " WHERE credit_ID = %d",
+    "SELECT * FROM %i WHERE credit_ID = %d",
+    THEATRUM_CREDITS_TABLE,
     $credit_id
   ));
 }
@@ -180,7 +181,8 @@ function theatrum_credits_create_credit_callback($request)
   }
 
   $max_order = (int) $wpdb->get_var($wpdb->prepare(
-    "SELECT MAX(credit_order) FROM " . THEATRUM_CREDITS_TABLE . " WHERE credit_production = %d",
+    "SELECT MAX(credit_order) FROM %i WHERE credit_production = %d",
+    THEATRUM_CREDITS_TABLE,
     $production_id
   ));
 
@@ -245,10 +247,12 @@ function theatrum_credits_reorder_callback($request)
   $table        = THEATRUM_CREDITS_TABLE;
   $placeholders = implode(',', array_fill(0, count($ids), '%d'));
 
+  // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- $placeholders is built entirely from array_fill()'s literal '%d', never from $ids' values; the sniff can't statically count a runtime-built placeholder list. Documented WordPress pattern for a dynamic-length IN() clause.
   $valid_ids = $wpdb->get_col($wpdb->prepare(
-    "SELECT credit_ID FROM $table WHERE credit_production = %d AND credit_ID IN ($placeholders)",
-    array_merge(array($production_id), $ids)
+    "SELECT credit_ID FROM %i WHERE credit_production = %d AND credit_ID IN ($placeholders)",
+    array_merge(array($table, $production_id), $ids)
   ));
+  // phpcs:enable
 
   if (count($valid_ids) !== count($ids)) {
     return new WP_Error('invalid_ids', 'One or more IDs do not belong to this production.', array('status' => 403));

@@ -28,13 +28,15 @@ function theatrum_credits_get_production_credits($production_id, $args = array()
 
   if (! empty($args['role_group'])) {
     $sql = $wpdb->prepare(
-      "SELECT * FROM $table WHERE credit_production = %d AND credit_role_group = %s ORDER BY credit_order ASC",
+      "SELECT * FROM %i WHERE credit_production = %d AND credit_role_group = %s ORDER BY credit_order ASC",
+      $table,
       $production_id,
       $args['role_group']
     );
   } else {
     $sql = $wpdb->prepare(
-      "SELECT * FROM $table WHERE credit_production = %d ORDER BY credit_order ASC",
+      "SELECT * FROM %i WHERE credit_production = %d ORDER BY credit_order ASC",
+      $table,
       $production_id
     );
   }
@@ -42,17 +44,20 @@ function theatrum_credits_get_production_credits($production_id, $args = array()
   if ($args['count_only']) {
     if (! empty($args['role_group'])) {
       return (int) $wpdb->get_var($wpdb->prepare(
-        "SELECT COUNT(*) FROM $table WHERE credit_production = %d AND credit_role_group = %s",
+        "SELECT COUNT(*) FROM %i WHERE credit_production = %d AND credit_role_group = %s",
+        $table,
         $production_id,
         $args['role_group']
       ));
     }
     return (int) $wpdb->get_var($wpdb->prepare(
-      "SELECT COUNT(*) FROM $table WHERE credit_production = %d",
+      "SELECT COUNT(*) FROM %i WHERE credit_production = %d",
+      $table,
       $production_id
     ));
   }
 
+  // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- $sql is always the result of $wpdb->prepare() above; the sniff can't trace it through the if/else.
   return $wpdb->get_results($sql);
 }
 
@@ -76,14 +81,16 @@ function theatrum_credits_get_artist_productions($artist_id, $args = array())
 
   if (! empty($args['role_group'])) {
     return $wpdb->get_results($wpdb->prepare(
-      "SELECT * FROM $table WHERE credit_artist = %d AND credit_role_group = %s ORDER BY credit_date DESC, credit_order ASC",
+      "SELECT * FROM %i WHERE credit_artist = %d AND credit_role_group = %s ORDER BY credit_date DESC, credit_order ASC",
+      $table,
       $artist_id,
       $args['role_group']
     ));
   }
 
   return $wpdb->get_results($wpdb->prepare(
-    "SELECT * FROM $table WHERE credit_artist = %d ORDER BY credit_date DESC, credit_order ASC",
+    "SELECT * FROM %i WHERE credit_artist = %d ORDER BY credit_date DESC, credit_order ASC",
+    $table,
     $artist_id
   ));
 }
@@ -157,7 +164,8 @@ function theatrum_credits_count_artist_productions($artist_id)
   global $wpdb;
 
   return (int) $wpdb->get_var($wpdb->prepare(
-    "SELECT COUNT(DISTINCT credit_production) FROM " . THEATRUM_CREDITS_TABLE . " WHERE credit_artist = %d",
+    "SELECT COUNT(DISTINCT credit_production) FROM %i WHERE credit_artist = %d",
+    THEATRUM_CREDITS_TABLE,
     $artist_id
   ));
 }
@@ -225,7 +233,8 @@ add_action('save_post_credit', function ($post_id) {
     );
   } else {
     $max_order = (int) $wpdb->get_var($wpdb->prepare(
-      "SELECT MAX(credit_order) FROM " . THEATRUM_CREDITS_TABLE . " WHERE credit_production = %d",
+      "SELECT MAX(credit_order) FROM %i WHERE credit_production = %d",
+      THEATRUM_CREDITS_TABLE,
       $production_id
     ));
 

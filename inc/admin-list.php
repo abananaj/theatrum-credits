@@ -53,21 +53,28 @@ class Theatrum_Credits_List_Table extends WP_List_Table
     if ($search) {
       $like  = '%' . $wpdb->esc_like($search) . '%';
       $total = (int) $wpdb->get_var($wpdb->prepare(
-        "SELECT COUNT(*) FROM $table WHERE credit_title LIKE %s OR credit_role LIKE %s",
+        "SELECT COUNT(*) FROM %i WHERE credit_title LIKE %s OR credit_role LIKE %s",
+        $table,
         $like,
         $like
       ));
       $this->items = $wpdb->get_results($wpdb->prepare(
-        "SELECT * FROM $table WHERE credit_title LIKE %s OR credit_role LIKE %s ORDER BY $orderby $order LIMIT %d OFFSET %d",
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $order is the ternary above, always the literal string 'ASC' or 'DESC', never user input directly interpolated. %i can't be used here: it backtick-quotes as an identifier, which breaks the ASC/DESC keyword.
+        "SELECT * FROM %i WHERE credit_title LIKE %s OR credit_role LIKE %s ORDER BY %i $order LIMIT %d OFFSET %d",
+        $table,
         $like,
         $like,
+        $orderby,
         $per_page,
         $offset
       ));
     } else {
-      $total       = (int) $wpdb->get_var("SELECT COUNT(*) FROM $table");
+      $total = (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i', $table));
       $this->items = $wpdb->get_results($wpdb->prepare(
-        "SELECT * FROM $table ORDER BY $orderby $order LIMIT %d OFFSET %d",
+        // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- see the identical $order note above.
+        "SELECT * FROM %i ORDER BY %i $order LIMIT %d OFFSET %d",
+        $table,
+        $orderby,
         $per_page,
         $offset
       ));
