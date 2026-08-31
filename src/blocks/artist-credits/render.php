@@ -59,8 +59,7 @@ foreach ($credits as $row) {
   $items[] = $item;
 }
 
-$wrapper_attributes = get_block_wrapper_attributes();
-
-echo '<div ' . $wrapper_attributes . '>';
+echo '<div ' . wp_kses_data(get_block_wrapper_attributes()) . '>';
+// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $items entries are assembled above from esc_url()/esc_html() output.
 echo '<ul class="artist-credits-ul" style="' . esc_attr($flex_style) . '">' . implode('', $items) . '</ul>';
 echo '</div>';

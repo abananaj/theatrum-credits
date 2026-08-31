@@ -54,9 +54,7 @@ $item_width         = isset($attributes['itemWidth']) && preg_match($css_length_
 
 $flex_style = sprintf('justify-content: %s; align-items: %s; --credit-width: %s;', $justify_content, $align_items, $item_width);
 
-$wrapper_attributes = get_block_wrapper_attributes();
-
-$html = '<div ' . $wrapper_attributes . '>';
+$html = '<div ' . wp_kses_data(get_block_wrapper_attributes()) . '>';
 $html .= '<ul class="production-credits-ul" style="' . esc_attr($flex_style) . '">';
 
 foreach ($credits as $row) {
@@ -86,4 +84,5 @@ foreach ($credits as $row) {
 $html .= '</ul>';
 $html .= '</div>';
 
+// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $html is assembled above from wp_kses_data()/esc_url()/esc_attr()/esc_html() output.
 echo $html;
