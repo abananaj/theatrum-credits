@@ -44,11 +44,14 @@ class Theatrum_Credits_List_Table extends WP_List_Table
     $offset       = ($current_page - 1) * $per_page;
 
     $allowed_orderby = array('credit_production', 'credit_role_group', 'credit_order');
-    $orderby = in_array($_GET['orderby'] ?? '', $allowed_orderby, true) ? $_GET['orderby'] : 'credit_production';
-    $order   = (($_GET['order'] ?? 'asc') === 'desc') ? 'DESC' : 'ASC';
+    // phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only WP_List_Table: orderby is whitelisted against $allowed_orderby, order is boolean-collapsed, search is sanitized. All writes go through REST, not this screen.
+    $orderby_raw = isset($_GET['orderby']) ? sanitize_key(wp_unslash($_GET['orderby'])) : '';
+    $orderby = in_array($orderby_raw, $allowed_orderby, true) ? $orderby_raw : 'credit_production';
+    $order   = (isset($_GET['order']) && 'desc' === strtolower(sanitize_key(wp_unslash($_GET['order'])))) ? 'DESC' : 'ASC';
 
     $table  = THEATRUM_CREDITS_TABLE;
-    $search = sanitize_text_field($_GET['s'] ?? '');
+    $search = isset($_GET['s']) ? sanitize_text_field(wp_unslash($_GET['s'])) : '';
+    // phpcs:enable WordPress.Security.NonceVerification.Recommended
 
     if ($search) {
       $like  = '%' . $wpdb->esc_like($search) . '%';

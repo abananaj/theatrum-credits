@@ -65,6 +65,18 @@
 	<!-- Also absent from Core/Extra; ADMIN_REVIEW.md's audit plan relies on it. -->
 	<rule ref="WordPress.DB.DirectDatabaseQuery"/>
 
+	<!-- ct_verify_term_meta_save() (chance-ollie inc/taxonomy/helpers.php) is a
+	     genuine wp_verify_nonce() + current_user_can() wrapper. Register it so
+	     NonceVerification credits the term-meta save handlers that gate on it
+	     instead of flagging the $_POST reads that follow. -->
+	<rule ref="WordPress.Security.NonceVerification">
+		<properties>
+			<property name="customNonceVerificationFunctions" type="array">
+				<element value="ct_verify_term_meta_save"/>
+			</property>
+		</properties>
+	</rule>
+
 	<rule ref="WordPress.WP.I18n">
 		<properties>
 			<property name="text_domain" type="array">
