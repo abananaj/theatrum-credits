@@ -51,6 +51,20 @@
 		     the plain "WordPress.WhiteSpace.PrecisionAlignment" name (the
 		     pre-3.x location) turned out not to exist and broke phpcs -e. -->
 		<exclude name="Universal.WhiteSpace.PrecisionAlignment"/>
+
+		<!-- DEVIATION (approved 2026-08-31): repo-wide no-space-inside-parens
+		     convention (`if($x)`, `foo($bar)`) instead of the handbook's padded
+		     form (`if ( $x )`). Confirmed by direct sampling, not just sniff
+		     count: 21 of 22 theatrum-blocks render.php files are 100% unpadded
+		     (the one exception was rewritten to full WPCS style during an
+		     unrelated fix pass, not evidence of a mixed style); chance-ollie,
+		     theatrum-admin, and theatrum-credits are each 100% unpadded across
+		     every `if(` site sampled. This is ~90% of every submodule's current
+		     phpcs error count — same reformat-noise rationale as the other
+		     deviations above. -->
+		<exclude name="PEAR.Functions.FunctionCallSignature.SpaceAfterOpenBracket"/>
+		<exclude name="PEAR.Functions.FunctionCallSignature.SpaceBeforeCloseBracket"/>
+		<exclude name="WordPress.WhiteSpace.ControlStructureSpacing"/>
 	</rule>
 
 	<!-- Explicit, not redundant: WordPress.Security.ValidatedSanitizedInput is in
