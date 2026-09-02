@@ -5,8 +5,5 @@ if (! defined('ABSPATH')) {
 }
 
 /**
- * ACF Field Group: Production Credits
- *
- * Repeater disabled — credits are now managed via the React meta box
- * in the block editor, writing directly to ct_credits.
+ * ACF Field Group: Production Credits — repeater disabled; credits are now managed via the React meta box, writing directly to ct_credits.
  */

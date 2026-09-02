@@ -5,10 +5,7 @@ if (! defined('ABSPATH')) {
 }
 
 /**
- * Production Credits Model
- *
- * All queries run directly against the ct_credits custom table.
- * Functions return arrays of stdClass row objects (not WP_Query).
+ * Production Credits Model — queries run directly against ct_credits via $wpdb; returns stdClass rows, not WP_Query.
  */
 
 /**
@@ -190,8 +187,7 @@ function theatrum_credits_count_production_credits($production_id, $role_group =
 }
 
 /**
- * Backwards compat: when a credit post is saved directly, sync it to ct_credits.
- * Uses _ct_credit_id postmeta (written during migration) to find the correct row.
+ * Backwards compat: syncs a directly-saved credit post to ct_credits via _ct_credit_id postmeta (written during migration).
  */
 add_action('save_post_credit', function ($post_id) {
   if (wp_is_post_revision($post_id) || wp_is_post_autosave($post_id)) {

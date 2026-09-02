@@ -13,9 +13,7 @@ function theatrum_credits_editor_permission_check()
   return current_user_can('edit_posts');
 }
 
-/* -----------------------------------------------------------------------
- * Helpers
- * -------------------------------------------------------------------- */
+// Helpers
 
 function theatrum_credits_get_row($credit_id)
 {
@@ -52,18 +50,8 @@ function theatrum_credits_format_row_for_editor($row)
   );
 }
 
-/* -----------------------------------------------------------------------
- * Producer meta sync — mirrors producer credits onto the production post
- * as postmeta (role => post ID, or an array of post IDs when more than
- * one producer shares the same role), kept in sync on create/update/delete.
- *
- * Only these 4 production-scoped roles are synced. Season-level roles
- * (Season Producers, Associate/Executive Season Producers, OTR Season
- * Producer, etc.) are entered per-production in ct_credits but display via
- * the season term's meta, not the production post — they must never be
- * written here. Role text is matched case/punctuation-insensitively so
- * plural and near-duplicate spellings collapse onto the same canonical key.
- * -------------------------------------------------------------------- */
+// Producer meta sync: mirrors these 4 production-scoped roles onto post meta (role => post ID(s)), kept in sync on create/update/delete.
+// Season-level roles must never be written here (they display via the season term's meta, not the production post). Role text matched case/punctuation-insensitively.
 
 define('THEATRUM_CREDITS_PRODUCER_META_MAP', array(
   'executive producer'  => 'executive_producer',
@@ -125,14 +113,10 @@ function theatrum_credits_remove_producer_meta($production_id, $role, $role_grou
   }
 }
 
-/* -----------------------------------------------------------------------
- * GET + POST /production-credits/{post_id}
- * -------------------------------------------------------------------- */
+// GET + POST /production-credits/{post_id}
 
 add_action('rest_api_init', function () {
-  // Public by design — only returns already-public data (titles, permalinks,
-  // thumbnails). If this callback is ever extended, keep it that way; add a
-  // capability check before returning anything non-public.
+  // Public by design — only returns already-public data (titles, permalinks, thumbnails); add a capability check before returning anything non-public if extended.
   register_rest_route('theatrum/v1', '/production-credits/(?P<post_id>\d+)', array(
     array(
       'methods'             => 'GET',
@@ -216,9 +200,7 @@ function theatrum_credits_create_credit_callback($request)
   return new WP_REST_Response(theatrum_credits_format_row_for_editor($new_row), 201);
 }
 
-/* -----------------------------------------------------------------------
- * POST /production-credits/{post_id}/reorder
- * -------------------------------------------------------------------- */
+// POST /production-credits/{post_id}/reorder
 
 add_action('rest_api_init', function () {
   register_rest_route('theatrum/v1', '/production-credits/(?P<post_id>\d+)/reorder', array(
@@ -271,9 +253,7 @@ function theatrum_credits_reorder_callback($request)
   return new WP_REST_Response(array('success' => true), 200);
 }
 
-/* -----------------------------------------------------------------------
- * PUT + DELETE /credit/{credit_id}
- * -------------------------------------------------------------------- */
+// PUT + DELETE /credit/{credit_id}
 
 add_action('rest_api_init', function () {
   register_rest_route('theatrum/v1', '/credit/(?P<credit_id>\d+)', array(
@@ -368,14 +348,10 @@ function theatrum_credits_delete_credit_callback($request)
   return new WP_REST_Response(array('deleted' => true, 'id' => $credit_id), 200);
 }
 
-/* -----------------------------------------------------------------------
- * GET /artist-credits/{post_id}
- * -------------------------------------------------------------------- */
+// GET /artist-credits/{post_id}
 
 add_action('rest_api_init', function () {
-  // Public by design — only returns already-public data (titles, permalinks).
-  // If this callback is ever extended, keep it that way; add a capability
-  // check before returning anything non-public.
+  // Public by design — only returns already-public data (titles, permalinks); add a capability check before returning anything non-public if extended.
   register_rest_route('theatrum/v1', '/artist-credits/(?P<post_id>\d+)', array(
     'methods'             => 'GET',
     'callback'            => 'theatrum_credits_get_artist_credits_callback',

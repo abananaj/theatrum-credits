@@ -4,11 +4,7 @@
       margin-bottom: 12px;
     }
 
-    // WP's TabPanel calls .focus() on the tab programmatically when it's
-    // selected, so its ::before focus-visible ring (a box-shadow box around
-    // the label) shows up even on a plain mouse click, not just keyboard
-    // nav — sitting right above the ::after active-tab underline bar and
-    // reading as a redundant "double underline". Keep only the underline.
+    // TabPanel calls .focus() programmatically on select, so the ::before focus ring shows on plain clicks too, reading as a redundant double underline; keep only the ::after underline.
     .components-tab-panel__tabs-item {
       outline: none !important;
 
@@ -16,12 +12,7 @@
         box-shadow: none !important;
       }
 
-      // The active-tab underline (::after) has `transition: all 0.1s linear`
-      // in core, and `.is-active::after` adds `outline: 2px solid transparent`.
-      // Because the transition is `all`, outline-color animates too — from
-      // its default (black) toward transparent — rendering as a solid black
-      // bar under the underline for that ~100ms. Confirmed on video. Scope
-      // the transition to height only and kill the outline outright.
+      // Core's `.is-active::after` transitions `all`, so its transparent outline animates from black for ~100ms, flashing a solid bar under the underline (confirmed on video); scope transition to height and kill the outline.
       &::after {
         outline: none !important;
         transition: height 0.1s linear !important;
@@ -101,10 +92,7 @@
         margin-bottom: 0;
       }
 
-      // ComboboxControl renders its suggestions list as a normal flex child
-      // (unlike SelectControl's native <select>, which pops up without
-      // affecting layout), so left alone it grows the row taller. Take it
-      // out of flow and overlay it instead, anchored to its own container.
+      // ComboboxControl's suggestions list is a normal flex child (unlike native <select>) and grows the row taller left alone; take it out of flow and overlay it instead.
       .components-combobox-control__suggestions-container {
         position: relative;
       }

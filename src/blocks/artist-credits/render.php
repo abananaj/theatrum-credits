@@ -1,11 +1,8 @@
 <?php
 
 /**
- * Artist Credits Block - Server-side render callback
- *
- * Displays all productions an artist has been credited in,
- * ordered by credit_date descending. Year is derived from credit_date, which is
- * stored as a Unix timestamp string (ACF "opening" field, 'U' return format).
+ * Artist Credits Block — server-side render. Lists productions an artist is credited in, newest first.
+ * credit_date is a Unix timestamp string (ACF "opening" field, 'U' format); year below is derived from it.
  */
 
 $post_id = get_the_ID();

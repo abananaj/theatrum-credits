@@ -1,12 +1,7 @@
 import { __ } from '@wordpress/i18n';
 
 /**
- * Block variations for Production Credits.
- *
- * Default (no variation): all credits for the production.
- * team:    credits with role_group != actor and != producer (creative_team, plus any legacy values)
- * cast:    credits with role_group = actor
- * partner: credits with role_group = producer
+ * Block variations for Production Credits — team = role_group not in [actor, producer] (exclusion-based; catches creative_team + any legacy values), cast = actor, partner = producer.
  */
 const variations = [
   {

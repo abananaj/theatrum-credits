@@ -1,6 +1,5 @@
 /**
- * React hook that is used to mark the block wrapper element.
- * It provides all the necessary props like the class name.
+ * useBlockProps marks the block wrapper element with the needed props (e.g. class name).
  *
  * @see https://developer.wordpress.org/block-editor/reference-guides/packages/packages-block-editor/#useblockprops
  */
@@ -32,8 +31,7 @@ const ALIGN_OPTIONS = [
 ];
 
 /**
- * The edit function describes the structure of your block in the context of the
- * editor. This represents what the editor will render when the block is used.
+ * Edit function: renders the block's structure in the editor.
  *
  * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-edit-save/#edit
  *
@@ -45,10 +43,8 @@ export default function Edit({ attributes, setAttributes }) {
 	const [credits, setCredits] = useState([]);
 	const [isLoading, setIsLoading] = useState(false);
 
-	// Get current post ID
 	const postId = useSelect((select) => select('core/editor').getCurrentPostId());
 
-	// Fetch credits when post ID changes
 	useEffect(() => {
 		if (!postId) {
 			setCredits([]);
@@ -57,7 +53,6 @@ export default function Edit({ attributes, setAttributes }) {
 
 		setIsLoading(true);
 
-		// Fetch credits using REST endpoint
 		apiFetch({ path: `/theatrum/v1/artist-credits/${postId}` })
 			.then((data) => {
 				setCredits(data.credits || []);
@@ -70,7 +65,6 @@ export default function Edit({ attributes, setAttributes }) {
 			});
 	}, [postId]);
 
-	// Helper function to decode HTML entities
 	const decodeHtmlEntities = (text) => {
 		const textarea = document.createElement('textarea');
 		textarea.innerHTML = text;

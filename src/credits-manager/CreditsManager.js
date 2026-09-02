@@ -22,16 +22,11 @@ const DEFAULT_ROLE_GROUP_BY_TAB = {
 function rowMatchesTab(row, tabName) {
   if (tabName === 'cast') return row.role_group === 'actor';
   if (tabName === 'producers') return row.role_group === 'producer';
-  // Catches legacy rows saved under the old, more granular role groups
-  // (playwright, director, choreographer, designer, other) as well as the
-  // current 'creative_team' value — anything that isn't Cast or Producers.
+  // Catches legacy per-role groups (playwright, director, etc.) and current 'creative_team' — anything that isn't Cast or Producers.
   return row.role_group !== 'actor' && row.role_group !== 'producer';
 }
 
-// The Role Group field is no longer user-editable — it's implied by whichever
-// tab a credit lives in. Normalizes old per-role values (director, designer,
-// etc., no longer in THEATRUM_CREDITS_VALID_ROLE_GROUPS) to 'creative_team'
-// so editing a pre-existing legacy-grouped credit doesn't fail validation.
+// Role Group is implied by tab, not user-edited; normalizes legacy per-role values (not in THEATRUM_CREDITS_VALID_ROLE_GROUPS) to 'creative_team' so old rows pass validation.
 function canonicalRoleGroupForRow(row) {
   if (row.role_group === 'actor' || row.role_group === 'producer') return row.role_group;
   return 'creative_team';
@@ -111,12 +106,8 @@ export default function CreditsManager() {
     });
   }, []);
 
-  // Rows are displayed one tab at a time, but saved as a single ordered list
-  // (credit_order is shared across all role groups for a production). Dragging
-  // within a tab only reorders that tab's rows relative to each other —
-  // `tabLocalIds` is the pre-drag order of local IDs for the active tab, used
-  // to find where the dragged row's new tab-relative neighbor sits in the
-  // full list, so other tabs' rows are left untouched in between.
+  // credit_order is one shared list across all tabs; dragging within a tab only reorders that tab's rows relative to each other.
+  // tabLocalIds is the pre-drag order for the active tab, used to find where the dragged row's new neighbor sits in the full list so other tabs stay untouched.
   const moveRowToIndex = useCallback((localId, toIndex, tabLocalIds) => {
     setRows((prev) => {
       const deleted = prev.filter((r) => r._deleted);
@@ -224,10 +215,7 @@ export default function CreditsManager() {
   const visibleRows = rows.filter((r) => !r._deleted && rowMatchesTab(r, activeTab));
   const rowsKey = visibleRows.map((r) => r._localId).join(',');
 
-  // jQuery UI Sortable — same library ACF's repeater uses for drag-to-reorder.
-  // `update` captures the drop target from the DOM; `stop` immediately cancels
-  // jQuery's own DOM move so React's key-based re-render is the only thing
-  // that actually reorders the rows (avoids the two fighting over the DOM).
+  // jQuery UI Sortable (same lib as ACF's repeater). `update` captures the drop target; `stop` cancels jQuery's own DOM move so React's key-based re-render is what actually reorders rows, avoiding the two fighting over the DOM.
   useEffect(() => {
     const $ = window.jQuery;
     if (!$ || !$.fn.sortable || !listRef.current) return undefined;
