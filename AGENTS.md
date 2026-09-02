@@ -3,6 +3,10 @@
 Claude Code agent workflows specific to **theatrum-credits**. For site-wide agent workflows,
 see [wp_root AGENTS.md](../../../AGENTS.md). For architecture, see [CLAUDE.md](CLAUDE.md).
 
+## Code Comments
+
+One line, essential info only. No multi-line/wrapped comment blocks, no restating what the code does — if a comment needs more than one line, cut it down or drop it.
+
 ## Working in this plugin
 
 No automated `CHANGELOG.md` — the root `/changelog` skill derives entries from `git log` here
