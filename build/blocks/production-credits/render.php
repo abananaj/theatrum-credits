@@ -1,14 +1,7 @@
 <?php
 
 /**
- * Production Credits Block - Server-side render callback
- *
- * Displays the artists credited for the current production.
- * Filters by role_group based on the `roleGroup` attribute:
- *   - "all"     → all credits (default)
- *   - "team"    → all credits excluding actor and producer
- *   - "cast"    → actor only
- *   - "partner" → producer only
+ * Production Credits Block — server-side render, filtered by `roleGroup`: all (default), team (everything except actor/producer — exclusion-based), cast (actor), partner (producer).
  */
 
 $post_id    = get_the_ID();
