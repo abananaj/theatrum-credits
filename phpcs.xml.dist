@@ -133,6 +133,12 @@
 	</rule>
 
 	<config name="testVersion" value="8.2-"/>
+	<!-- WP requires render.php inside a static closure (wp-includes/blocks.php: render_callback),
+	     so its file-scope variables are locals, never globals. The sniff cannot model that. -->
+	<rule ref="WordPress.WP.GlobalVariablesOverride">
+		<exclude-pattern>*/render.php</exclude-pattern>
+	</rule>
+
 	<rule ref="PHPCompatibilityWP"/>
 
 	<config name="minimum_wp_version" value="7.1"/>
