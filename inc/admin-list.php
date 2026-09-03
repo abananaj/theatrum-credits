@@ -20,11 +20,11 @@ class Theatrum_Credits_List_Table extends WP_List_Table
 
   public function get_columns() {
     return array(
-      'credit_production' => 'Production',
-      'credit_artist'     => 'Artist',
-      'credit_role_group' => 'Role Group',
-      'credit_role'       => 'Role',
-      'credit_order'      => 'Order',
+      'credit_production' => __('Production', 'theatrum-credits'),
+      'credit_artist'     => __('Artist', 'theatrum-credits'),
+      'credit_role_group' => __('Role Group', 'theatrum-credits'),
+      'credit_role'       => __('Role', 'theatrum-credits'),
+      'credit_order'      => __('Order', 'theatrum-credits'),
     );
   }
 

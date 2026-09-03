@@ -8,26 +8,26 @@ import apiFetch from '@wordpress/api-fetch';
 const TEAM_EXCLUDE_GROUPS = ['actor', 'producer'];
 
 const VARIATION_OPTIONS = [
-  { label: __('All Credits', 'theatrum-blocks'), value: 'all' },
-  { label: __('Production Team', 'theatrum-blocks'), value: 'team' },
-  { label: __('Production Cast', 'theatrum-blocks'), value: 'cast' },
-  { label: __('Production Partners', 'theatrum-blocks'), value: 'partner' },
+  { label: __('All Credits', 'theatrum-credits'), value: 'all' },
+  { label: __('Production Team', 'theatrum-credits'), value: 'team' },
+  { label: __('Production Cast', 'theatrum-credits'), value: 'cast' },
+  { label: __('Production Partners', 'theatrum-credits'), value: 'partner' },
 ];
 
 const JUSTIFY_OPTIONS = [
-  { label: __('Left', 'theatrum-blocks'), value: 'flex-start' },
-  { label: __('Center', 'theatrum-blocks'), value: 'center' },
-  { label: __('Right', 'theatrum-blocks'), value: 'flex-end' },
-  { label: __('Space between', 'theatrum-blocks'), value: 'space-between' },
-  { label: __('Space around', 'theatrum-blocks'), value: 'space-around' },
-  { label: __('Space evenly', 'theatrum-blocks'), value: 'space-evenly' },
+  { label: __('Left', 'theatrum-credits'), value: 'flex-start' },
+  { label: __('Center', 'theatrum-credits'), value: 'center' },
+  { label: __('Right', 'theatrum-credits'), value: 'flex-end' },
+  { label: __('Space between', 'theatrum-credits'), value: 'space-between' },
+  { label: __('Space around', 'theatrum-credits'), value: 'space-around' },
+  { label: __('Space evenly', 'theatrum-credits'), value: 'space-evenly' },
 ];
 
 const ALIGN_OPTIONS = [
-  { label: __('Top', 'theatrum-blocks'), value: 'flex-start' },
-  { label: __('Center', 'theatrum-blocks'), value: 'center' },
-  { label: __('Bottom', 'theatrum-blocks'), value: 'flex-end' },
-  { label: __('Stretch', 'theatrum-blocks'), value: 'stretch' },
+  { label: __('Top', 'theatrum-credits'), value: 'flex-start' },
+  { label: __('Center', 'theatrum-credits'), value: 'center' },
+  { label: __('Bottom', 'theatrum-credits'), value: 'flex-end' },
+  { label: __('Stretch', 'theatrum-credits'), value: 'stretch' },
 ];
 
 function filterByRoleGroup(credits, roleGroup) {
@@ -102,28 +102,28 @@ export default function Edit({ attributes, setAttributes }) {
       <InspectorControls>
         <div style={{ padding: '16px' }}>
           <SelectControl
-            label={__('Display', 'theatrum-blocks')}
+            label={__('Display', 'theatrum-credits')}
             value={roleGroup}
             options={VARIATION_OPTIONS}
             onChange={(value) => setAttributes({ roleGroup: value })}
           />
         </div>
-        <PanelBody title={__('Layout', 'theatrum-blocks')}>
+        <PanelBody title={__('Layout', 'theatrum-credits')}>
           <SelectControl
-            label={__('Justify content', 'theatrum-blocks')}
+            label={__('Justify content', 'theatrum-credits')}
             value={justifyContent}
             options={JUSTIFY_OPTIONS}
             onChange={(value) => setAttributes({ justifyContent: value })}
           />
           <SelectControl
-            label={__('Align items', 'theatrum-blocks')}
+            label={__('Align items', 'theatrum-credits')}
             value={alignItems}
             options={ALIGN_OPTIONS}
             onChange={(value) => setAttributes({ alignItems: value })}
           />
           <TextControl
-            label={__('Item width', 'theatrum-blocks')}
-            help={__('Any CSS length, e.g. 160px, 10rem, 20%', 'theatrum-blocks')}
+            label={__('Item width', 'theatrum-credits')}
+            help={__('Any CSS length, e.g. 160px, 10rem, 20%', 'theatrum-credits')}
             value={itemWidth}
             onChange={(value) => setAttributes({ itemWidth: value })}
           />

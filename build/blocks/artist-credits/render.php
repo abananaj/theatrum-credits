@@ -7,7 +7,7 @@
 
 $post_id = get_the_ID();
 
-if (! $post_id) {
+if ( ! $post_id) {
   return;
 }
 
@@ -18,12 +18,12 @@ if (empty($credits)) {
 }
 
 $allowed_justify = array('flex-start', 'center', 'flex-end', 'space-between', 'space-around', 'space-evenly');
-$allowed_align    = array('flex-start', 'center', 'flex-end', 'stretch');
+$allowed_align   = array('flex-start', 'center', 'flex-end', 'stretch');
 
 $justify_content = isset($attributes['justifyContent']) && in_array($attributes['justifyContent'], $allowed_justify, true)
   ? $attributes['justifyContent']
   : 'flex-start';
-$align_items      = isset($attributes['alignItems']) && in_array($attributes['alignItems'], $allowed_align, true)
+$align_items     = isset($attributes['alignItems']) && in_array($attributes['alignItems'], $allowed_align, true)
   ? $attributes['alignItems']
   : 'flex-start';
 
@@ -48,9 +48,12 @@ foreach ($credits as $row) {
   $item = '<li class="credit"><a href="' . esc_url($production_url) . '"><span class="title">' . esc_html($production_title) . '</span></a>';
 
   $parts = array();
-  if (! empty($display_role)) $parts[] = '<span class="role">' . esc_html($display_role) . ',</span><br>';
-  if (! empty($year))         $parts[] = '<span class="date">' . esc_html($year) . '</span>';
-  if (! empty($parts))        $item   .= '<p>' . implode('', $parts) . '</p>';
+  if ( ! empty($display_role)) { $parts[] = '<span class="role">' . esc_html($display_role) . ',</span><br>';
+  }
+  if ( ! empty($year)) {         $parts[] = '<span class="date">' . esc_html($year) . '</span>';
+  }
+  if ( ! empty($parts)) {        $item .= '<p>' . implode('', $parts) . '</p>';
+  }
 
   $item   .= '</li>';
   $items[] = $item;
