@@ -134,10 +134,15 @@
 		<exclude-pattern>*/render.php</exclude-pattern>
 	</rule>
 
-	<rule ref="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound">
-		<exclude-pattern>*/render.php</exclude-pattern>
-	</rule>
 
+	<!-- `ct_` is 3 characters and WPCS hard-codes MIN_PREFIX_LENGTH = 4 with no override property,
+	     so it discards the prefix outright and counts all 127 ct_* symbols as unprefixed. Renaming
+	     would touch 386 occurrences across 47 files including hook callbacks referenced by name;
+	     the user accepted `ct_` as a deviation instead (2026-09-02, DEVIATIONS.md).
+
+	     Detection is NOT lost. `audit.sh crosscheck` runs its own prefix check against the real
+	     prefix list in .audit/config/submodules.tsv, names each offending symbol, and hard-fails
+	     the run — which is strictly better here, since it understands ct_ and this sniff cannot. -->
 	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
 		<properties>
 			<property name="prefixes" type="array">
@@ -145,6 +150,12 @@
 				<element value="ct_"/>
 			</property>
 		</properties>
+		<exclude name="WordPress.NamingConventions.PrefixAllGlobals.ShortPrefixPassed"/>
+		<exclude name="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound"/>
+		<exclude name="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound"/>
+		<exclude name="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedClassFound"/>
+		<exclude name="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound"/>
+		<exclude name="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound"/>
 	</rule>
 
 	<config name="testVersion" value="8.3-"/>
