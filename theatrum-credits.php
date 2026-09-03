@@ -12,7 +12,7 @@
  */
 
 // Exit if accessed directly
-if (! defined('ABSPATH')) {
+if ( ! defined('ABSPATH')) {
   exit;
 }
 
@@ -44,8 +44,7 @@ require_once THEATRUM_CREDITS_PLUGIN_DIR . 'inc/admin-list.php';
 /**
  * Register the artist-credits and production-credits blocks.
  */
-function theatrum_credits_register_blocks()
-{
+function theatrum_credits_register_blocks() {
   $blocks = array('artist-credits', 'production-credits');
   foreach ($blocks as $block) {
     register_block_type(THEATRUM_CREDITS_PLUGIN_DIR . 'build/blocks/' . $block);
@@ -62,8 +61,7 @@ add_action('init', 'theatrum_credits_register_blocks');
  * @param array[] $categories Registered block categories.
  * @return array[]
  */
-function theatrum_credits_register_block_category($categories)
-{
+function theatrum_credits_register_block_category($categories) {
   if (in_array('production', array_column($categories, 'slug'), true)) {
     return $categories;
   }
@@ -86,40 +84,48 @@ function theatrum_credits_register_block_category($categories)
 }
 add_filter('block_categories_all', 'theatrum_credits_register_block_category');
 
-add_action('add_meta_boxes', function () {
-  add_meta_box(
-    'theatrum-credits-manager',
-    'Production Credits',
+add_action(
+    'add_meta_boxes',
     function () {
-      echo '<div id="theatrum-credits-manager-root"></div>';
-    },
-    'production',
-    'normal',
-    'high'
-  );
-});
+    add_meta_box(
+        'theatrum-credits-manager',
+        'Production Credits',
+        function () {
+          echo '<div id="theatrum-credits-manager-root"></div>';
+        },
+        'production',
+        'normal',
+        'high'
+    );
+    }
+);
 
-add_action('admin_enqueue_scripts', function () {
-  $screen = get_current_screen();
-  if (! $screen || $screen->post_type !== 'production') return;
+add_action(
+    'admin_enqueue_scripts',
+    function () {
+    $screen = get_current_screen();
+    if ( ! $screen || $screen->post_type !== 'production') { return;
+    }
 
-  $asset_file = THEATRUM_CREDITS_PLUGIN_DIR . 'build/credits-manager/index.asset.php';
-  if (! file_exists($asset_file)) return;
+    $asset_file = THEATRUM_CREDITS_PLUGIN_DIR . 'build/credits-manager/index.asset.php';
+    if ( ! file_exists($asset_file)) { return;
+    }
 
-  $asset = require $asset_file;
+    $asset = require $asset_file;
 
-  wp_enqueue_script(
-    'theatrum-credits-manager',
-    THEATRUM_CREDITS_PLUGIN_URL . 'build/credits-manager/index.js',
-    array_merge($asset['dependencies'], array('jquery', 'jquery-ui-sortable')),
-    $asset['version'],
-    true
-  );
+    wp_enqueue_script(
+        'theatrum-credits-manager',
+        THEATRUM_CREDITS_PLUGIN_URL . 'build/credits-manager/index.js',
+        array_merge($asset['dependencies'], array('jquery', 'jquery-ui-sortable')),
+        $asset['version'],
+        true
+    );
 
-  wp_enqueue_style(
-    'theatrum-credits-manager-editor',
-    THEATRUM_CREDITS_PLUGIN_URL . 'build/credits-manager/index.css',
-    array(),
-    $asset['version']
-  );
-});
+    wp_enqueue_style(
+        'theatrum-credits-manager-editor',
+        THEATRUM_CREDITS_PLUGIN_URL . 'build/credits-manager/index.css',
+        array(),
+        $asset['version']
+    );
+    }
+);

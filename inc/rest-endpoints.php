@@ -1,45 +1,46 @@
 <?php
 
-if (! defined('ABSPATH')) {
+if ( ! defined('ABSPATH')) {
   exit;
 }
 
 // phpcs:disable WordPress.DB.DirectDatabaseQuery -- ct_credits is a custom table, so $wpdb is the only way to reach it. Nothing here is cacheable either: every call is a write, or a read taken immediately before one (row lookup, MAX(credit_order), ID validation) that must see current rows. The cached reads live in models/credits.php; each write below calls theatrum_credits_cache_invalidate() to retire them.
 
-define('THEATRUM_CREDITS_VALID_ROLE_GROUPS', array(
-  'actor', 'creative_team', 'producer',
-));
+define(
+    'THEATRUM_CREDITS_VALID_ROLE_GROUPS',
+    array(
+    'actor', 'creative_team', 'producer',
+    )
+);
 
-function theatrum_credits_editor_permission_check()
-{
+function theatrum_credits_editor_permission_check() {
   return current_user_can('edit_posts');
 }
 
 // Helpers
 
-function theatrum_credits_get_row($credit_id)
-{
+function theatrum_credits_get_row($credit_id) {
   global $wpdb;
-  return $wpdb->get_row($wpdb->prepare(
-    "SELECT * FROM %i WHERE credit_ID = %d",
-    THEATRUM_CREDITS_TABLE,
-    $credit_id
-  ));
+return $wpdb->get_row(
+    $wpdb->prepare(
+        "SELECT * FROM %i WHERE credit_ID = %d",
+        THEATRUM_CREDITS_TABLE,
+        $credit_id
+    )
+);
 }
 
-function theatrum_credits_verify_ownership($row)
-{
-  if (! $row) {
+function theatrum_credits_verify_ownership($row) {
+  if ( ! $row) {
     return new WP_Error('not_found', 'Credit not found.', array('status' => 404));
   }
-  if (! current_user_can('edit_post', (int) $row->credit_production)) {
+  if ( ! current_user_can('edit_post', (int) $row->credit_production)) {
     return new WP_Error('forbidden', 'You cannot edit this credit.', array('status' => 403));
   }
   return true;
 }
 
-function theatrum_credits_format_row_for_editor($row)
-{
+function theatrum_credits_format_row_for_editor($row) {
   return array(
     'id'               => (int) $row->credit_ID,
     'artist_id'        => (int) $row->credit_artist,
@@ -55,18 +56,20 @@ function theatrum_credits_format_row_for_editor($row)
 // Producer meta sync: mirrors these 4 production-scoped roles onto post meta (role => post ID(s)), kept in sync on create/update/delete.
 // Season-level roles must never be written here (they display via the season term's meta, not the production post). Role text matched case/punctuation-insensitively.
 
-define('THEATRUM_CREDITS_PRODUCER_META_MAP', array(
-  'executive producer'  => 'executive_producer',
-  'executive producers' => 'executive_producer',
-  'associate producer'  => 'associate_producer',
-  'associate producers' => 'associate_producer',
-  'assoc producers'     => 'associate_producer',
-  'corporate sponsor'   => 'corporate_sponsor',
-  'supporting producer' => 'supporting_producer',
-));
+define(
+    'THEATRUM_CREDITS_PRODUCER_META_MAP',
+    array(
+    'executive producer'  => 'executive_producer',
+    'executive producers' => 'executive_producer',
+    'associate producer'  => 'associate_producer',
+    'associate producers' => 'associate_producer',
+    'assoc producers'     => 'associate_producer',
+    'corporate sponsor'   => 'corporate_sponsor',
+    'supporting producer' => 'supporting_producer',
+    )
+);
 
-function theatrum_credits_producer_meta_key($role, $role_group)
-{
+function theatrum_credits_producer_meta_key($role, $role_group) {
   $role = trim((string) $role);
   $role = strtolower($role);
   $role = preg_replace('/[^a-z0-9]+/', ' ', $role);
@@ -75,10 +78,9 @@ function theatrum_credits_producer_meta_key($role, $role_group)
   return isset(THEATRUM_CREDITS_PRODUCER_META_MAP[$role]) ? THEATRUM_CREDITS_PRODUCER_META_MAP[$role] : false;
 }
 
-function theatrum_credits_add_producer_meta($production_id, $role, $role_group, $artist_id)
-{
+function theatrum_credits_add_producer_meta($production_id, $role, $role_group, $artist_id) {
   $key = theatrum_credits_producer_meta_key($role, $role_group);
-  if (! $key) {
+  if ( ! $key) {
     return;
   }
   $existing = get_post_meta($production_id, $key, true);
@@ -86,17 +88,16 @@ function theatrum_credits_add_producer_meta($production_id, $role, $role_group, 
   $ids = $existing === '' ? array() : (is_array($existing) ? $existing : array($existing));
   $ids = array_map('intval', $ids);
 
-  if (! in_array((int) $artist_id, $ids, true)) {
+  if ( ! in_array((int) $artist_id, $ids, true)) {
     $ids[] = (int) $artist_id;
   }
 
   update_post_meta($production_id, $key, count($ids) === 1 ? $ids[0] : array_values($ids));
 }
 
-function theatrum_credits_remove_producer_meta($production_id, $role, $role_group, $artist_id)
-{
+function theatrum_credits_remove_producer_meta($production_id, $role, $role_group, $artist_id) {
   $key = theatrum_credits_producer_meta_key($role, $role_group);
-  if (! $key) {
+  if ( ! $key) {
     return;
   }
   $existing = get_post_meta($production_id, $key, true);
@@ -117,40 +118,45 @@ function theatrum_credits_remove_producer_meta($production_id, $role, $role_grou
 
 // GET + POST /production-credits/{post_id}
 
-add_action('rest_api_init', function () {
-  // Public by design — only returns already-public data (titles, permalinks, thumbnails); add a capability check before returning anything non-public if extended.
-  register_rest_route('theatrum/v1', '/production-credits/(?P<post_id>\d+)', array(
-    array(
-      'methods'             => 'GET',
-      'callback'            => 'theatrum_credits_get_production_credits_callback',
-      'permission_callback' => '__return_true',
-    ),
-    array(
-      'methods'             => 'POST',
-      'callback'            => 'theatrum_credits_create_credit_callback',
-      'permission_callback' => 'theatrum_credits_editor_permission_check',
-    ),
-  ));
-});
+add_action(
+    'rest_api_init',
+    function () {
+    // Public by design — only returns already-public data (titles, permalinks, thumbnails); add a capability check before returning anything non-public if extended.
+    register_rest_route(
+        'theatrum/v1',
+        '/production-credits/(?P<post_id>\d+)',
+        array(
+        array(
+        'methods'             => 'GET',
+        'callback'            => 'theatrum_credits_get_production_credits_callback',
+        'permission_callback' => '__return_true',
+        ),
+        array(
+        'methods'             => 'POST',
+        'callback'            => 'theatrum_credits_create_credit_callback',
+        'permission_callback' => 'theatrum_credits_editor_permission_check',
+        ),
+        )
+    );
+    }
+);
 
-function theatrum_credits_get_production_credits_callback($request)
-{
+function theatrum_credits_get_production_credits_callback($request) {
   $production_id = absint($request['post_id']);
-  if (! $production_id) {
+  if ( ! $production_id) {
     return new WP_Error('invalid_id', 'Invalid production.', array('status' => 400));
   }
-  $rows          = theatrum_credits_get_production_credits($production_id);
+  $rows = theatrum_credits_get_production_credits($production_id);
   // Public route: don't leak draft/private artists to anonymous callers; editors still see every row.
-  if (! current_user_can('edit_posts')) {
+  if ( ! current_user_can('edit_posts')) {
     $rows = array_values(array_filter($rows, fn($row) => get_post_status($row->credit_artist) === 'publish'));
   }
-  $output        = array_map('theatrum_credits_format_row_for_editor', $rows);
+  $output = array_map('theatrum_credits_format_row_for_editor', $rows);
 
   return new WP_REST_Response(array('credits' => $output), 200);
 }
 
-function theatrum_credits_create_credit_callback($request)
-{
+function theatrum_credits_create_credit_callback($request) {
   global $wpdb;
 
   $production_id = absint($request['post_id']);
@@ -158,30 +164,32 @@ function theatrum_credits_create_credit_callback($request)
   $role_group    = sanitize_text_field($request->get_param('role_group'));
   $role          = sanitize_text_field($request->get_param('role') ?: '');
 
-  if (! in_array($role_group, THEATRUM_CREDITS_VALID_ROLE_GROUPS, true)) {
+  if ( ! in_array($role_group, THEATRUM_CREDITS_VALID_ROLE_GROUPS, true)) {
     return new WP_Error('invalid_role_group', 'Invalid role group.', array('status' => 400));
   }
 
   $production_post = get_post($production_id);
   $artist_post     = get_post($artist_id);
 
-  if (! $production_post || ! $artist_post) {
+  if ( ! $production_post || ! $artist_post) {
     return new WP_Error('invalid_ids', 'Production or artist not found.', array('status' => 400));
   }
 
-  if (! current_user_can('edit_post', $production_id)) {
+  if ( ! current_user_can('edit_post', $production_id)) {
     return new WP_Error('forbidden', 'You cannot add credits to this production.', array('status' => 403));
   }
 
-  $max_order = (int) $wpdb->get_var($wpdb->prepare(
-    "SELECT MAX(credit_order) FROM %i WHERE credit_production = %d",
-    THEATRUM_CREDITS_TABLE,
-    $production_id
-  ));
+$max_order = (int) $wpdb->get_var(
+    $wpdb->prepare(
+        "SELECT MAX(credit_order) FROM %i WHERE credit_production = %d",
+        THEATRUM_CREDITS_TABLE,
+        $production_id
+    )
+);
 
   $credit_title = $production_post->post_title . ' / ' . $artist_post->post_title;
 
-  $inserted = $wpdb->insert(
+$inserted = $wpdb->insert(
     THEATRUM_CREDITS_TABLE,
     array(
       'credit_title'      => $credit_title,
@@ -194,11 +202,11 @@ function theatrum_credits_create_credit_callback($request)
       'credit_order'      => $max_order + 1,
     ),
     array('%s', '%s', '%d', '%d', '%s', '%s', '%s', '%d')
-  );
+);
 
   theatrum_credits_cache_invalidate();
 
-  if (! $inserted) {
+  if ( ! $inserted) {
     return new WP_Error('insert_failed', 'Failed to create credit.', array('status' => 500));
   }
 
@@ -213,26 +221,32 @@ function theatrum_credits_create_credit_callback($request)
 
 // POST /production-credits/{post_id}/reorder
 
-add_action('rest_api_init', function () {
-  register_rest_route('theatrum/v1', '/production-credits/(?P<post_id>\d+)/reorder', array(
-    'methods'             => 'POST',
-    'callback'            => 'theatrum_credits_reorder_callback',
-    'permission_callback' => 'theatrum_credits_editor_permission_check',
-  ));
-});
+add_action(
+    'rest_api_init',
+    function () {
+    register_rest_route(
+        'theatrum/v1',
+        '/production-credits/(?P<post_id>\d+)/reorder',
+        array(
+        'methods'             => 'POST',
+        'callback'            => 'theatrum_credits_reorder_callback',
+        'permission_callback' => 'theatrum_credits_editor_permission_check',
+        )
+    );
+    }
+);
 
-function theatrum_credits_reorder_callback($request)
-{
+function theatrum_credits_reorder_callback($request) {
   global $wpdb;
 
   $production_id = absint($request['post_id']);
   $order         = $request->get_param('order');
 
-  if (! current_user_can('edit_post', $production_id)) {
+  if ( ! current_user_can('edit_post', $production_id)) {
     return new WP_Error('forbidden', 'You cannot reorder credits for this production.', array('status' => 403));
   }
 
-  if (! is_array($order) || empty($order)) {
+  if ( ! is_array($order) || empty($order)) {
     return new WP_Error('invalid_order', 'order must be a non-empty array.', array('status' => 400));
   }
 
@@ -241,10 +255,12 @@ function theatrum_credits_reorder_callback($request)
   $placeholders = implode(',', array_fill(0, count($ids), '%d'));
 
   // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- $placeholders is built entirely from array_fill()'s literal '%d', never from $ids' values; the sniff can't statically count a runtime-built placeholder list. Documented WordPress pattern for a dynamic-length IN() clause. $placeholders is built entirely from array_fill()'s literal '%d', never from $ids' values; the sniff can't statically count a runtime-built placeholder list. Documented WordPress pattern for a dynamic-length IN() clause.
-  $valid_ids = $wpdb->get_col($wpdb->prepare(
-    "SELECT credit_ID FROM %i WHERE credit_production = %d AND credit_ID IN ($placeholders)",
-    array_merge(array($table, $production_id), $ids)
-  ));
+$valid_ids = $wpdb->get_col(
+    $wpdb->prepare(
+        "SELECT credit_ID FROM %i WHERE credit_production = %d AND credit_ID IN ($placeholders)",
+        array_merge(array($table, $production_id), $ids)
+    )
+);
   // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
 
   if (count($valid_ids) !== count($ids)) {
@@ -253,11 +269,11 @@ function theatrum_credits_reorder_callback($request)
 
   foreach ($ids as $position => $credit_id) {
     $wpdb->update(
-      $table,
-      array('credit_order' => $position),
-      array('credit_ID'    => $credit_id),
-      array('%d'),
-      array('%d')
+        $table,
+        array('credit_order' => $position),
+        array('credit_ID' => $credit_id),
+        array('%d'),
+        array('%d')
     );
   }
 
@@ -268,49 +284,56 @@ function theatrum_credits_reorder_callback($request)
 
 // PUT + DELETE /credit/{credit_id}
 
-add_action('rest_api_init', function () {
-  register_rest_route('theatrum/v1', '/credit/(?P<credit_id>\d+)', array(
-    array(
-      'methods'             => 'PUT',
-      'callback'            => 'theatrum_credits_update_credit_callback',
-      'permission_callback' => 'theatrum_credits_editor_permission_check',
-    ),
-    array(
-      'methods'             => 'DELETE',
-      'callback'            => 'theatrum_credits_delete_credit_callback',
-      'permission_callback' => 'theatrum_credits_editor_permission_check',
-    ),
-  ));
-});
+add_action(
+    'rest_api_init',
+    function () {
+    register_rest_route(
+        'theatrum/v1',
+        '/credit/(?P<credit_id>\d+)',
+        array(
+        array(
+        'methods'             => 'PUT',
+        'callback'            => 'theatrum_credits_update_credit_callback',
+        'permission_callback' => 'theatrum_credits_editor_permission_check',
+        ),
+        array(
+        'methods'             => 'DELETE',
+        'callback'            => 'theatrum_credits_delete_credit_callback',
+        'permission_callback' => 'theatrum_credits_editor_permission_check',
+        ),
+        )
+    );
+    }
+);
 
-function theatrum_credits_update_credit_callback($request)
-{
+function theatrum_credits_update_credit_callback($request) {
   global $wpdb;
 
   $credit_id = absint($request['credit_id']);
   $row       = theatrum_credits_get_row($credit_id);
   $check     = theatrum_credits_verify_ownership($row);
 
-  if (is_wp_error($check)) return $check;
+  if (is_wp_error($check)) { return $check;
+  }
 
   $role_group = sanitize_text_field($request->get_param('role_group') ?: $row->credit_role_group);
   $role       = sanitize_text_field($request->get_param('role') ?? $row->credit_role);
   $artist_id  = intval($request->get_param('artist') ?: $row->credit_artist);
 
-  if (! in_array($role_group, THEATRUM_CREDITS_VALID_ROLE_GROUPS, true)) {
+  if ( ! in_array($role_group, THEATRUM_CREDITS_VALID_ROLE_GROUPS, true)) {
     return new WP_Error('invalid_role_group', 'Invalid role group.', array('status' => 400));
   }
 
   $artist_post     = get_post($artist_id);
   $production_post = get_post((int) $row->credit_production);
 
-  if (! $production_post || ! $artist_post) {
+  if ( ! $production_post || ! $artist_post) {
     return new WP_Error('invalid_ids', 'Production or artist not found.', array('status' => 400));
   }
 
-  $credit_title    = $production_post->post_title . ' / ' . $artist_post->post_title;
+  $credit_title = $production_post->post_title . ' / ' . $artist_post->post_title;
 
-  $wpdb->update(
+$wpdb->update(
     THEATRUM_CREDITS_TABLE,
     array(
       'credit_title'      => $credit_title,
@@ -322,7 +345,7 @@ function theatrum_credits_update_credit_callback($request)
     array('credit_ID' => $credit_id),
     array('%s', '%s', '%d', '%s', '%s'),
     array('%d')
-  );
+);
 
   theatrum_credits_cache_invalidate();
 
@@ -336,25 +359,25 @@ function theatrum_credits_update_credit_callback($request)
   return new WP_REST_Response(theatrum_credits_format_row_for_editor(theatrum_credits_get_row($credit_id)), 200);
 }
 
-function theatrum_credits_delete_credit_callback($request)
-{
+function theatrum_credits_delete_credit_callback($request) {
   global $wpdb;
 
   $credit_id = absint($request['credit_id']);
   $row       = theatrum_credits_get_row($credit_id);
   $check     = theatrum_credits_verify_ownership($row);
 
-  if (is_wp_error($check)) return $check;
+  if (is_wp_error($check)) { return $check;
+  }
 
-  $deleted = $wpdb->delete(
+$deleted = $wpdb->delete(
     THEATRUM_CREDITS_TABLE,
     array('credit_ID' => $credit_id),
     array('%d')
-  );
+);
 
   theatrum_credits_cache_invalidate();
 
-  if (! $deleted) {
+  if ( ! $deleted) {
     return new WP_Error('delete_failed', 'Failed to delete credit.', array('status' => 500));
   }
 
@@ -367,27 +390,33 @@ function theatrum_credits_delete_credit_callback($request)
 
 // GET /artist-credits/{post_id}
 
-add_action('rest_api_init', function () {
-  // Public by design — only returns already-public data (titles, permalinks); add a capability check before returning anything non-public if extended.
-  register_rest_route('theatrum/v1', '/artist-credits/(?P<post_id>\d+)', array(
-    'methods'             => 'GET',
-    'callback'            => 'theatrum_credits_get_artist_credits_callback',
-    'permission_callback' => '__return_true',
-  ));
-});
+add_action(
+    'rest_api_init',
+    function () {
+    // Public by design — only returns already-public data (titles, permalinks); add a capability check before returning anything non-public if extended.
+    register_rest_route(
+        'theatrum/v1',
+        '/artist-credits/(?P<post_id>\d+)',
+        array(
+        'methods'             => 'GET',
+        'callback'            => 'theatrum_credits_get_artist_credits_callback',
+        'permission_callback' => '__return_true',
+        )
+    );
+    }
+);
 
-function theatrum_credits_get_artist_credits_callback($request)
-{
+function theatrum_credits_get_artist_credits_callback($request) {
   $artist_id = absint($request['post_id']);
-  if (! $artist_id) {
+  if ( ! $artist_id) {
     return new WP_Error('invalid_id', 'Invalid artist.', array('status' => 400));
   }
-  $rows      = theatrum_credits_get_artist_productions($artist_id);
+  $rows = theatrum_credits_get_artist_productions($artist_id);
   // Public route: unpublished productions stay invisible to anonymous callers.
-  if (! current_user_can('edit_posts')) {
+  if ( ! current_user_can('edit_posts')) {
     $rows = array_values(array_filter($rows, fn($row) => get_post_status($row->credit_production) === 'publish'));
   }
-  $output    = array();
+  $output = array();
 
   foreach ($rows as $row) {
     $year     = $row->credit_date

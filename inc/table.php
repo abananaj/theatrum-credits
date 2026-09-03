@@ -1,11 +1,10 @@
 <?php
 
-if (! defined('ABSPATH')) {
+if ( ! defined('ABSPATH')) {
   exit;
 }
 
-function theatrum_credits_create_table()
-{
+function theatrum_credits_create_table() {
   global $wpdb;
 
   $table   = THEATRUM_CREDITS_TABLE;
@@ -36,8 +35,7 @@ function theatrum_credits_create_table()
   update_option('theatrum_credits_db_version', '1.1.0');
 }
 
-function theatrum_credits_maybe_create_table()
-{
+function theatrum_credits_maybe_create_table() {
   if (get_option('theatrum_credits_db_version') !== '1.1.0') {
     theatrum_credits_create_table();
   }

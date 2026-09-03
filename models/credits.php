@@ -1,6 +1,6 @@
 <?php
 
-if (! defined('ABSPATH')) {
+if ( ! defined('ABSPATH')) {
   exit;
 }
 
@@ -23,16 +23,14 @@ const THEATRUM_CREDITS_CACHE_GROUP = 'theatrum_credits';
  * @param array  $parts Arguments that change the result.
  * @return string
  */
-function theatrum_credits_cache_key($name, array $parts)
-{
+function theatrum_credits_cache_key($name, array $parts) {
   return $name . ':' . md5(wp_json_encode($parts)) . ':' . wp_cache_get_last_changed(THEATRUM_CREDITS_CACHE_GROUP);
 }
 
 /**
  * Retires every cached ct_credits read. Call after any write to the table.
  */
-function theatrum_credits_cache_invalidate()
-{
+function theatrum_credits_cache_invalidate() {
   wp_cache_set('last_changed', microtime(), THEATRUM_CREDITS_CACHE_GROUP);
 }
 
@@ -43,30 +41,29 @@ function theatrum_credits_cache_invalidate()
  * @param array $args  role_group (string), count_only (bool)
  * @return array|int   Array of row objects, or int when count_only is true
  */
-function theatrum_credits_get_production_credits($production_id, $args = array())
-{
+function theatrum_credits_get_production_credits($production_id, $args = array()) {
   global $wpdb;
 
   $defaults = array(
     'role_group' => '',
     'count_only' => false,
   );
-  $args = wp_parse_args($args, $defaults);
+  $args     = wp_parse_args($args, $defaults);
 
   $table = THEATRUM_CREDITS_TABLE;
 
-  if (! empty($args['role_group'])) {
+  if ( ! empty($args['role_group'])) {
     $sql = $wpdb->prepare(
-      "SELECT * FROM %i WHERE credit_production = %d AND credit_role_group = %s ORDER BY credit_order ASC",
-      $table,
-      $production_id,
-      $args['role_group']
+        "SELECT * FROM %i WHERE credit_production = %d AND credit_role_group = %s ORDER BY credit_order ASC",
+        $table,
+        $production_id,
+        $args['role_group']
     );
   } else {
     $sql = $wpdb->prepare(
-      "SELECT * FROM %i WHERE credit_production = %d ORDER BY credit_order ASC",
-      $table,
-      $production_id
+        "SELECT * FROM %i WHERE credit_production = %d ORDER BY credit_order ASC",
+        $table,
+        $production_id
     );
   }
 
@@ -78,21 +75,25 @@ function theatrum_credits_get_production_credits($production_id, $args = array()
   }
 
   if ($args['count_only']) {
-    if (! empty($args['role_group'])) {
+    if ( ! empty($args['role_group'])) {
       // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching -- cached above/below on $key.
-      $count = (int) $wpdb->get_var($wpdb->prepare(
-        "SELECT COUNT(*) FROM %i WHERE credit_production = %d AND credit_role_group = %s",
-        $table,
-        $production_id,
-        $args['role_group']
-      ));
+    $count = (int) $wpdb->get_var(
+        $wpdb->prepare(
+            "SELECT COUNT(*) FROM %i WHERE credit_production = %d AND credit_role_group = %s",
+            $table,
+            $production_id,
+            $args['role_group']
+        )
+    );
     } else {
       // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching -- cached above/below on $key.
-      $count = (int) $wpdb->get_var($wpdb->prepare(
-        "SELECT COUNT(*) FROM %i WHERE credit_production = %d",
-        $table,
-        $production_id
-      ));
+    $count = (int) $wpdb->get_var(
+        $wpdb->prepare(
+            "SELECT COUNT(*) FROM %i WHERE credit_production = %d",
+            $table,
+            $production_id
+        )
+    );
     }
 
     wp_cache_set($key, $count, THEATRUM_CREDITS_CACHE_GROUP);
@@ -115,14 +116,13 @@ function theatrum_credits_get_production_credits($production_id, $args = array()
  * @param array $args  role_group (string)
  * @return array  Array of row objects
  */
-function theatrum_credits_get_artist_productions($artist_id, $args = array())
-{
+function theatrum_credits_get_artist_productions($artist_id, $args = array()) {
   global $wpdb;
 
   $defaults = array(
     'role_group' => '',
   );
-  $args = wp_parse_args($args, $defaults);
+  $args     = wp_parse_args($args, $defaults);
 
   $table = THEATRUM_CREDITS_TABLE;
 
@@ -133,21 +133,25 @@ function theatrum_credits_get_artist_productions($artist_id, $args = array())
     return $cached;
   }
 
-  if (! empty($args['role_group'])) {
+  if ( ! empty($args['role_group'])) {
     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching -- cached above/below on $key.
-    $rows = $wpdb->get_results($wpdb->prepare(
-      "SELECT * FROM %i WHERE credit_artist = %d AND credit_role_group = %s ORDER BY credit_date DESC, credit_order ASC",
-      $table,
-      $artist_id,
-      $args['role_group']
-    ));
+    $rows = $wpdb->get_results(
+        $wpdb->prepare(
+            "SELECT * FROM %i WHERE credit_artist = %d AND credit_role_group = %s ORDER BY credit_date DESC, credit_order ASC",
+            $table,
+            $artist_id,
+            $args['role_group']
+        )
+    );
   } else {
     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching -- cached above/below on $key.
-    $rows = $wpdb->get_results($wpdb->prepare(
-      "SELECT * FROM %i WHERE credit_artist = %d ORDER BY credit_date DESC, credit_order ASC",
-      $table,
-      $artist_id
-    ));
+    $rows = $wpdb->get_results(
+        $wpdb->prepare(
+            "SELECT * FROM %i WHERE credit_artist = %d ORDER BY credit_date DESC, credit_order ASC",
+            $table,
+            $artist_id
+        )
+    );
   }
 
   wp_cache_set($key, $rows, THEATRUM_CREDITS_CACHE_GROUP);
@@ -161,15 +165,14 @@ function theatrum_credits_get_artist_productions($artist_id, $args = array())
  * @param int $production_id
  * @return array  Keyed by role_group string
  */
-function theatrum_credits_get_credits_by_group($production_id)
-{
-  $credits    = theatrum_credits_get_production_credits($production_id);
-  $organized  = array();
+function theatrum_credits_get_credits_by_group($production_id) {
+  $credits   = theatrum_credits_get_production_credits($production_id);
+  $organized = array();
 
   foreach ($credits as $row) {
     $group = $row->credit_role_group;
 
-    if (! isset($organized[$group])) {
+    if ( ! isset($organized[$group])) {
       $organized[$group] = array();
     }
 
@@ -193,8 +196,7 @@ function theatrum_credits_get_credits_by_group($production_id)
  * @param int $artist_id
  * @return array
  */
-function theatrum_credits_get_artist_productions_with_dates($artist_id)
-{
+function theatrum_credits_get_artist_productions_with_dates($artist_id) {
   $credits     = theatrum_credits_get_artist_productions($artist_id);
   $productions = array();
 
@@ -219,8 +221,7 @@ function theatrum_credits_get_artist_productions_with_dates($artist_id)
  * @param int $artist_id
  * @return int
  */
-function theatrum_credits_count_artist_productions($artist_id)
-{
+function theatrum_credits_count_artist_productions($artist_id) {
   global $wpdb;
 
   $key    = theatrum_credits_cache_key('count_artist_productions', array($artist_id));
@@ -231,11 +232,13 @@ function theatrum_credits_count_artist_productions($artist_id)
   }
 
   // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching -- cached above/below on $key.
-  $count = (int) $wpdb->get_var($wpdb->prepare(
-    "SELECT COUNT(DISTINCT credit_production) FROM %i WHERE credit_artist = %d",
-    THEATRUM_CREDITS_TABLE,
-    $artist_id
-  ));
+$count = (int) $wpdb->get_var(
+    $wpdb->prepare(
+        "SELECT COUNT(DISTINCT credit_production) FROM %i WHERE credit_artist = %d",
+        THEATRUM_CREDITS_TABLE,
+        $artist_id
+    )
+);
 
   wp_cache_set($key, $count, THEATRUM_CREDITS_CACHE_GROUP);
 
@@ -249,74 +252,80 @@ function theatrum_credits_count_artist_productions($artist_id)
  * @param string $role_group
  * @return int
  */
-function theatrum_credits_count_production_credits($production_id, $role_group = '')
-{
-  return theatrum_credits_get_production_credits($production_id, array(
+function theatrum_credits_count_production_credits($production_id, $role_group = '') {
+return theatrum_credits_get_production_credits(
+    $production_id,
+    array(
     'role_group' => $role_group,
     'count_only' => true,
-  ));
+    )
+);
 }
 
 /**
  * Backwards compat: syncs a directly-saved credit post to ct_credits via _ct_credit_id postmeta (written during migration).
  */
-add_action('save_post_credit', function ($post_id) {
-  if (wp_is_post_revision($post_id) || wp_is_post_autosave($post_id)) {
-    return;
-  }
-  if (! current_user_can('edit_post', $post_id)) {
-    return;
-  }
+add_action(
+    'save_post_credit',
+    function ($post_id) {
+    if (wp_is_post_revision($post_id) || wp_is_post_autosave($post_id)) {
+      return;
+    }
+    if ( ! current_user_can('edit_post', $post_id)) {
+      return;
+    }
 
-  global $wpdb;
+    global $wpdb;
 
-  $production_id = (int) get_post_meta($post_id, 'production', true);
-  $artist_id     = (int) get_post_meta($post_id, 'artist', true);
-  $role_group    = get_post_meta($post_id, 'role_group', true) ?: '';
-  $role          = get_post_meta($post_id, 'role', true) ?: '';
+    $production_id = (int) get_post_meta($post_id, 'production', true);
+    $artist_id     = (int) get_post_meta($post_id, 'artist', true);
+    $role_group    = get_post_meta($post_id, 'role_group', true) ?: '';
+    $role          = get_post_meta($post_id, 'role', true) ?: '';
 
-  if (! $production_id || ! $artist_id) {
-    return;
-  }
+    if ( ! $production_id || ! $artist_id) {
+      return;
+    }
 
-  $production_post = get_post($production_id);
-  $artist_post     = get_post($artist_id);
-  if (! $production_post || ! $artist_post) {
-    return;
-  }
+    $production_post = get_post($production_id);
+    $artist_post     = get_post($artist_id);
+    if ( ! $production_post || ! $artist_post) {
+      return;
+    }
 
-  $credit_title = $production_post->post_title . ' / ' . $artist_post->post_title;
-  $credit_date  = get_field('opening', $production_id) ?: '';
-  $ct_credit_id = (int) get_post_meta($post_id, '_ct_credit_id', true);
+    $credit_title = $production_post->post_title . ' / ' . $artist_post->post_title;
+    $credit_date  = get_field('opening', $production_id) ?: '';
+    $ct_credit_id = (int) get_post_meta($post_id, '_ct_credit_id', true);
 
-  if ($ct_credit_id) {
-    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching -- must read current rows: this runs immediately before a write, or backs the admin list table.
+    if ($ct_credit_id) {
+      // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching -- must read current rows: this runs immediately before a write, or backs the admin list table.
     $wpdb->update(
-      THEATRUM_CREDITS_TABLE,
-      array(
-        'credit_title'      => $credit_title,
-        'credit_name'       => sanitize_title($credit_title),
-        'credit_artist'     => $artist_id,
-        'credit_production' => $production_id,
-        'credit_role'       => $role,
-        'credit_role_group' => $role_group,
-        'credit_date'       => $credit_date,
-      ),
-      array('credit_ID' => $ct_credit_id),
-      array('%s', '%s', '%d', '%d', '%s', '%s', '%s'),
-      array('%d')
+        THEATRUM_CREDITS_TABLE,
+        array(
+          'credit_title'      => $credit_title,
+          'credit_name'       => sanitize_title($credit_title),
+          'credit_artist'     => $artist_id,
+          'credit_production' => $production_id,
+          'credit_role'       => $role,
+          'credit_role_group' => $role_group,
+          'credit_date'       => $credit_date,
+        ),
+        array('credit_ID' => $ct_credit_id),
+        array('%s', '%s', '%d', '%d', '%s', '%s', '%s'),
+        array('%d')
     );
-  } else {
+    } else {
     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching -- must read current rows: this runs immediately before a write, or backs the admin list table.
-    $max_order = (int) $wpdb->get_var($wpdb->prepare(
-      "SELECT MAX(credit_order) FROM %i WHERE credit_production = %d",
-      THEATRUM_CREDITS_TABLE,
-      $production_id
-    ));
+    $max_order = (int) $wpdb->get_var(
+        $wpdb->prepare(
+            "SELECT MAX(credit_order) FROM %i WHERE credit_production = %d",
+            THEATRUM_CREDITS_TABLE,
+            $production_id
+        )
+    );
 
     $wpdb->insert(
-      THEATRUM_CREDITS_TABLE,
-      array(
+        THEATRUM_CREDITS_TABLE,
+        array(
         'credit_title'      => $credit_title,
         'credit_name'       => sanitize_title($credit_title),
         'credit_artist'     => $artist_id,
@@ -325,14 +334,16 @@ add_action('save_post_credit', function ($post_id) {
         'credit_role_group' => $role_group,
         'credit_date'       => $credit_date,
         'credit_order'      => $max_order + 1,
-      ),
-      array('%s', '%s', '%d', '%d', '%s', '%s', '%s', '%d')
+        ),
+        array('%s', '%s', '%d', '%d', '%s', '%s', '%s', '%d')
     );
 
     if ($wpdb->insert_id) {
       update_post_meta($post_id, '_ct_credit_id', (int) $wpdb->insert_id);
     }
-  }
+    }
 
-  theatrum_credits_cache_invalidate();
-}, 20);
+    theatrum_credits_cache_invalidate();
+    },
+    20
+);
