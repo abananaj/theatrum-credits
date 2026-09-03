@@ -9,7 +9,12 @@ import { InspectorControls, useBlockProps } from '@wordpress/block-editor';
  * WordPress dependencies
  */
 import { useState, useEffect } from '@wordpress/element';
-import { PanelBody, SelectControl, Spinner, TextControl } from '@wordpress/components';
+import {
+	PanelBody,
+	SelectControl,
+	Spinner,
+	TextControl,
+} from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
 import apiFetch from '@wordpress/api-fetch';
@@ -33,17 +38,26 @@ const ALIGN_OPTIONS = [
 /**
  * Edit function: renders the block's structure in the editor.
  *
+ * @param  root0
+ * @param  root0.attributes
+ * @param  root0.setAttributes
  * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-edit-save/#edit
  *
  * @return {Element} Element to render.
  */
 export default function Edit({ attributes, setAttributes }) {
-	const { justifyContent = 'flex-start', alignItems = 'flex-start', itemWidth = '240px' } = attributes;
+	const {
+		justifyContent = 'flex-start',
+		alignItems = 'flex-start',
+		itemWidth = '240px',
+	} = attributes;
 	const blockProps = useBlockProps();
 	const [credits, setCredits] = useState([]);
 	const [isLoading, setIsLoading] = useState(false);
 
-	const postId = useSelect((select) => select('core/editor').getCurrentPostId());
+	const postId = useSelect((select) =>
+		select('core/editor').getCurrentPostId()
+	);
 
 	useEffect(() => {
 		if (!postId) {
@@ -103,19 +117,28 @@ export default function Edit({ attributes, setAttributes }) {
 						label={__('Justify content', 'theatrum-credits')}
 						value={justifyContent}
 						options={JUSTIFY_OPTIONS}
-						onChange={(value) => setAttributes({ justifyContent: value })}
+						onChange={(value) =>
+							setAttributes({ justifyContent: value })
+						}
 					/>
 					<SelectControl
 						label={__('Align items', 'theatrum-credits')}
 						value={alignItems}
 						options={ALIGN_OPTIONS}
-						onChange={(value) => setAttributes({ alignItems: value })}
+						onChange={(value) =>
+							setAttributes({ alignItems: value })
+						}
 					/>
 					<TextControl
 						label={__('Item width', 'theatrum-credits')}
-						help={__('Any CSS length, e.g. 240px, 10rem, 20%', 'theatrum-credits')}
+						help={__(
+							'Any CSS length, e.g. 240px, 10rem, 20%',
+							'theatrum-credits'
+						)}
 						value={itemWidth}
-						onChange={(value) => setAttributes({ itemWidth: value })}
+						onChange={(value) =>
+							setAttributes({ itemWidth: value })
+						}
 					/>
 				</PanelBody>
 			</InspectorControls>
@@ -124,7 +147,11 @@ export default function Edit({ attributes, setAttributes }) {
 					<Spinner />
 				) : (
 					<ul className="artist-credits-ul" style={flexStyle}>
-						{listItems.length > 0 ? listItems : <li>No credits found</li>}
+						{listItems.length > 0 ? (
+							listItems
+						) : (
+							<li>No credits found</li>
+						)}
 					</ul>
 				)}
 			</div>
