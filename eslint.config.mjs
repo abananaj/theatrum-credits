@@ -34,7 +34,6 @@ export default [
 			'**/build/**',
 			'**/dist/**',
 			'**/.build/**',
-			'**/animista/**',
 			'**/*.min.js',
 			'eslint.config.mjs',
 		],

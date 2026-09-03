@@ -3,7 +3,6 @@
 	"//1": "@wordpress/stylelint-config is 'per the WordPress CSS Coding Standards' per the @wordpress/scripts docs (GLOBAL_REVIEW.md §1c) — unlike the ESLint substitution, this one IS handbook-cited, just not from the CSS handbook page itself.",
 	"//2": "customSyntax is load-bearing, not cosmetic: without it stylelint parses .scss as plain CSS and chokes on @use/nesting/interpolation, producing CssSyntaxError noise instead of real lint findings (found 2026-08-30 when theatrum-credits' first real run reported 3 fake syntax errors alongside 3 genuine style findings).",
 	"//3": "Two rule overrides below (2026-09-02). Both are tool gaps, not deviations from the CSS standard: postcss-scss parses SCSS at-rules but at-rule-no-unknown has no SCSS vocabulary, and @wordpress/stylelint-config's kebab-only class pattern rejects the BEM class names @wordpress/components itself ships (.components-tab-panel__tabs), which stylesheets must target verbatim.",
-	"//4": "animista/ is gitignored in theatrum-animation (51 generated keyframe sources kept locally, shipped nowhere) — linting it makes the count depend on whose machine ran the audit.",
 	"extends": "@wordpress/stylelint-config",
 	"customSyntax": "postcss-scss",
 	"rules": {
@@ -43,7 +42,6 @@
 		"**/node_modules/**",
 		"**/build/**",
 		"**/dist/**",
-		"**/.build/**",
-		"**/animista/**"
+		"**/.build/**"
 	]
 }
