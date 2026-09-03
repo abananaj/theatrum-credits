@@ -14,12 +14,30 @@
 // Token substituted by sync: TEXTDOMAIN (not double-braced here on purpose —
 // str_replace would eat a literal placeholder in this comment too)
 
-import wpConfig from '@wordpress/eslint-plugin/configs/recommended.js';
+// The package's "exports" map only exposes the root and ./eslintrc, so importing
+// '@wordpress/eslint-plugin/configs/recommended.js' throws ERR_PACKAGE_PATH_NOT_EXPORTED and
+// ESLint aborts before linting a single file — silently the case in all five submodules until
+// 2026-09-02. Read the flat config off the package root instead.
+import wpPlugin from '@wordpress/eslint-plugin';
+
+const wpConfig = wpPlugin.configs.recommended;
 
 export default [
 	...wpConfig,
 	{
-		ignores: [ '**/vendor/**', '**/node_modules/**', '**/build/**', '**/dist/**', '**/.build/**' ],
+		// *.min.js: vendored minified libraries (public/gsap.min.js alone was 2,136 of the theme's 3,232
+		// findings). eslint.config.mjs: rendered by `audit.sh sync` from a template, so its own findings
+		// can never be fixed in place.
+		ignores: [
+			'**/vendor/**',
+			'**/node_modules/**',
+			'**/build/**',
+			'**/dist/**',
+			'**/.build/**',
+			'**/animista/**',
+			'**/*.min.js',
+			'eslint.config.mjs',
+		],
 	},
 	{
 		rules: {

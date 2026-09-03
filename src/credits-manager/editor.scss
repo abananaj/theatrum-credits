@@ -1,5 +1,7 @@
 .theatrum-credits-manager {
+
   .credits-tabs {
+
     .components-tab-panel__tabs {
       margin-bottom: 12px;
     }
@@ -10,6 +12,7 @@
       &:not(:focus-visible) {
         outline: none !important;
       }
+
       &:focus-visible {
         outline: 2px solid var(--wp-admin-theme-color, #3858e9);
         outline-offset: -2px;
@@ -36,11 +39,6 @@
     align-items: center;
     gap: 8px;
     margin-bottom: 8px;
-
-    &.ui-sortable-helper .credit-row {
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-      cursor: grabbing;
-    }
 
     // visibility, not opacity:0 — an invisible-but-clickable button is a trap for pointer and AT users alike.
     .credit-row-delete {
@@ -116,6 +114,12 @@
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
       }
     }
+  }
+
+  // Drag state, after the .credit-row base it overrides.
+  .credit-row-wrapper.ui-sortable-helper .credit-row {
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    cursor: grabbing;
   }
 
   .credit-row-placeholder {

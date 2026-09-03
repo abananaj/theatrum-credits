@@ -11,7 +11,8 @@
   },
   "devDependencies": {
     "@babel/runtime": "^7.0.0",
-    "@wordpress/eslint-plugin": "^21.0.0",
-    "@wordpress/scripts": "^29.0.0"
+    "@wordpress/eslint-plugin": "^25.10.0",
+    "@wordpress/scripts": "^32.0.0",
+    "eslint": "^9.39.5"
   }
 }

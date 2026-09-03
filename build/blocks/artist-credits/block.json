@@ -3,7 +3,7 @@
   "apiVersion": 3,
   "name": "theatrum/artist-credits",
   "title": "Artist Credits",
-  "category": "widgets",
+  "category": "production",
   "description": "Display a list of artist credits for a production",
   "textdomain": "artist-credits",
   "icon": "list-view",

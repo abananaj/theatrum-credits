@@ -53,6 +53,39 @@ function theatrum_credits_register_blocks()
 }
 add_action('init', 'theatrum_credits_register_blocks');
 
+/**
+ * Ensure the "Production" block category exists.
+ *
+ * theatrum-blocks registers the same slug; this plugin is a mu-plugin and must not depend on that
+ * one being active, so it adds the category only when nobody else has.
+ *
+ * @param array[] $categories Registered block categories.
+ * @return array[]
+ */
+function theatrum_credits_register_block_category($categories)
+{
+  if (in_array('production', array_column($categories, 'slug'), true)) {
+    return $categories;
+  }
+
+  $widgets_index = array_search('widgets', array_column($categories, 'slug'), true);
+  $production    = array(
+    'slug'  => 'production',
+    'title' => __('Production', 'theatrum-credits'),
+    'icon'  => null,
+  );
+
+  if (false !== $widgets_index) {
+    array_splice($categories, $widgets_index, 0, array($production));
+    return $categories;
+  }
+
+  $categories[] = $production;
+
+  return $categories;
+}
+add_filter('block_categories_all', 'theatrum_credits_register_block_category');
+
 add_action('add_meta_boxes', function () {
   add_meta_box(
     'theatrum-credits-manager',
