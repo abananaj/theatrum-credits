@@ -1,5 +1,7 @@
 <?php
 
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery -- ct_credits is a custom table; $wpdb is the only way to reach it, there is no WP API to prefer.
+
 if (! class_exists('WP_List_Table')) {
   require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
 }
@@ -55,12 +57,14 @@ class Theatrum_Credits_List_Table extends WP_List_Table
 
     if ($search) {
       $like  = '%' . $wpdb->esc_like($search) . '%';
+      // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching -- must read current rows: this runs immediately before a write, or backs the admin list table.
       $total = (int) $wpdb->get_var($wpdb->prepare(
         "SELECT COUNT(*) FROM %i WHERE credit_title LIKE %s OR credit_role LIKE %s",
         $table,
         $like,
         $like
       ));
+      // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching -- must read current rows: this runs immediately before a write, or backs the admin list table.
       $this->items = $wpdb->get_results($wpdb->prepare(
         // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $order is the ternary above, always the literal string 'ASC' or 'DESC', never user input directly interpolated. %i can't be used here: it backtick-quotes as an identifier, which breaks the ASC/DESC keyword.
         "SELECT * FROM %i WHERE credit_title LIKE %s OR credit_role LIKE %s ORDER BY %i $order LIMIT %d OFFSET %d",
@@ -72,7 +76,9 @@ class Theatrum_Credits_List_Table extends WP_List_Table
         $offset
       ));
     } else {
+      // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching -- must read current rows: this runs immediately before a write, or backs the admin list table.
       $total = (int) $wpdb->get_var($wpdb->prepare('SELECT COUNT(*) FROM %i', $table));
+      // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching -- must read current rows: this runs immediately before a write, or backs the admin list table.
       $this->items = $wpdb->get_results($wpdb->prepare(
         // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- see the identical $order note above.
         "SELECT * FROM %i ORDER BY %i $order LIMIT %d OFFSET %d",

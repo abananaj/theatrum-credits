@@ -123,6 +123,12 @@
 		</properties>
 	</rule>
 
+	<!-- Same closure contract as GlobalVariablesOverride above: a render.php file-scope variable is a
+	     local, so it cannot collide with anything. -->
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound">
+		<exclude-pattern>*/render.php</exclude-pattern>
+	</rule>
+
 	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
 		<properties>
 			<property name="prefixes" type="array">

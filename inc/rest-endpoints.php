@@ -4,6 +4,8 @@ if (! defined('ABSPATH')) {
   exit;
 }
 
+// phpcs:disable WordPress.DB.DirectDatabaseQuery -- ct_credits is a custom table, so $wpdb is the only way to reach it. Nothing here is cacheable either: every call is a write, or a read taken immediately before one (row lookup, MAX(credit_order), ID validation) that must see current rows. The cached reads live in models/credits.php; each write below calls theatrum_credits_cache_invalidate() to retire them.
+
 define('THEATRUM_CREDITS_VALID_ROLE_GROUPS', array(
   'actor', 'creative_team', 'producer',
 ));
@@ -194,6 +196,8 @@ function theatrum_credits_create_credit_callback($request)
     array('%s', '%s', '%d', '%d', '%s', '%s', '%s', '%d')
   );
 
+  theatrum_credits_cache_invalidate();
+
   if (! $inserted) {
     return new WP_Error('insert_failed', 'Failed to create credit.', array('status' => 500));
   }
@@ -236,12 +240,12 @@ function theatrum_credits_reorder_callback($request)
   $table        = THEATRUM_CREDITS_TABLE;
   $placeholders = implode(',', array_fill(0, count($ids), '%d'));
 
-  // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- $placeholders is built entirely from array_fill()'s literal '%d', never from $ids' values; the sniff can't statically count a runtime-built placeholder list. Documented WordPress pattern for a dynamic-length IN() clause.
+  // phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- $placeholders is built entirely from array_fill()'s literal '%d', never from $ids' values; the sniff can't statically count a runtime-built placeholder list. Documented WordPress pattern for a dynamic-length IN() clause. $placeholders is built entirely from array_fill()'s literal '%d', never from $ids' values; the sniff can't statically count a runtime-built placeholder list. Documented WordPress pattern for a dynamic-length IN() clause.
   $valid_ids = $wpdb->get_col($wpdb->prepare(
     "SELECT credit_ID FROM %i WHERE credit_production = %d AND credit_ID IN ($placeholders)",
     array_merge(array($table, $production_id), $ids)
   ));
-  // phpcs:enable
+  // phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber
 
   if (count($valid_ids) !== count($ids)) {
     return new WP_Error('invalid_ids', 'One or more IDs do not belong to this production.', array('status' => 403));
@@ -256,6 +260,8 @@ function theatrum_credits_reorder_callback($request)
       array('%d')
     );
   }
+
+  theatrum_credits_cache_invalidate();
 
   return new WP_REST_Response(array('success' => true), 200);
 }
@@ -318,6 +324,8 @@ function theatrum_credits_update_credit_callback($request)
     array('%d')
   );
 
+  theatrum_credits_cache_invalidate();
+
   if ($row->credit_role_group === 'producer') {
     theatrum_credits_remove_producer_meta((int) $row->credit_production, $row->credit_role, $row->credit_role_group, (int) $row->credit_artist);
   }
@@ -343,6 +351,8 @@ function theatrum_credits_delete_credit_callback($request)
     array('credit_ID' => $credit_id),
     array('%d')
   );
+
+  theatrum_credits_cache_invalidate();
 
   if (! $deleted) {
     return new WP_Error('delete_failed', 'Failed to delete credit.', array('status' => 500));
