@@ -3,7 +3,7 @@ import { Button, TextControl, ComboboxControl } from '@wordpress/components';
 import apiFetch from '@wordpress/api-fetch';
 import { decodeEntities } from '@wordpress/html-entities';
 
-export default function CreditRow({ row, onChange, onDelete }) {
+export default function CreditRow({ row, onChange, onDelete, onMoveUp, onMoveDown, canMoveUp, canMoveDown }) {
   const [artistOptions, setArtistOptions] = useState(
     row.artist_id
       ? [{ value: row.artist_id, label: decodeEntities(row.artist_title) || String(row.artist_id) }]
@@ -57,6 +57,10 @@ export default function CreditRow({ row, onChange, onDelete }) {
           </svg>
         </span>
       </div>
+      <span className="credit-row-move">
+        <Button icon="arrow-up-alt2" label="Move up" showTooltip size="small" onClick={onMoveUp} disabled={!canMoveUp} />
+        <Button icon="arrow-down-alt2" label="Move down" showTooltip size="small" onClick={onMoveDown} disabled={!canMoveDown} />
+      </span>
       <Button
         className="credit-row-delete"
         icon="trash"

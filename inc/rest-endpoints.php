@@ -133,8 +133,15 @@ add_action('rest_api_init', function () {
 
 function theatrum_credits_get_production_credits_callback($request)
 {
-  $production_id = intval($request['post_id']);
+  $production_id = absint($request['post_id']);
+  if (! $production_id) {
+    return new WP_Error('invalid_id', 'Invalid production.', array('status' => 400));
+  }
   $rows          = theatrum_credits_get_production_credits($production_id);
+  // Public route: don't leak draft/private artists to anonymous callers; editors still see every row.
+  if (! current_user_can('edit_posts')) {
+    $rows = array_values(array_filter($rows, fn($row) => get_post_status($row->credit_artist) === 'publish'));
+  }
   $output        = array_map('theatrum_credits_format_row_for_editor', $rows);
 
   return new WP_REST_Response(array('credits' => $output), 200);
@@ -144,8 +151,8 @@ function theatrum_credits_create_credit_callback($request)
 {
   global $wpdb;
 
-  $production_id = intval($request['post_id']);
-  $artist_id     = intval($request->get_param('artist'));
+  $production_id = absint($request['post_id']);
+  $artist_id     = absint($request->get_param('artist'));
   $role_group    = sanitize_text_field($request->get_param('role_group'));
   $role          = sanitize_text_field($request->get_param('role') ?: '');
 
@@ -214,7 +221,7 @@ function theatrum_credits_reorder_callback($request)
 {
   global $wpdb;
 
-  $production_id = intval($request['post_id']);
+  $production_id = absint($request['post_id']);
   $order         = $request->get_param('order');
 
   if (! current_user_can('edit_post', $production_id)) {
@@ -274,7 +281,7 @@ function theatrum_credits_update_credit_callback($request)
 {
   global $wpdb;
 
-  $credit_id = intval($request['credit_id']);
+  $credit_id = absint($request['credit_id']);
   $row       = theatrum_credits_get_row($credit_id);
   $check     = theatrum_credits_verify_ownership($row);
 
@@ -325,7 +332,7 @@ function theatrum_credits_delete_credit_callback($request)
 {
   global $wpdb;
 
-  $credit_id = intval($request['credit_id']);
+  $credit_id = absint($request['credit_id']);
   $row       = theatrum_credits_get_row($credit_id);
   $check     = theatrum_credits_verify_ownership($row);
 
@@ -361,13 +368,20 @@ add_action('rest_api_init', function () {
 
 function theatrum_credits_get_artist_credits_callback($request)
 {
-  $artist_id = intval($request['post_id']);
+  $artist_id = absint($request['post_id']);
+  if (! $artist_id) {
+    return new WP_Error('invalid_id', 'Invalid artist.', array('status' => 400));
+  }
   $rows      = theatrum_credits_get_artist_productions($artist_id);
+  // Public route: unpublished productions stay invisible to anonymous callers.
+  if (! current_user_can('edit_posts')) {
+    $rows = array_values(array_filter($rows, fn($row) => get_post_status($row->credit_production) === 'publish'));
+  }
   $output    = array();
 
   foreach ($rows as $row) {
     $year     = $row->credit_date
-      ? date('Y', is_numeric($row->credit_date) ? (int) $row->credit_date : strtotime($row->credit_date))
+      ? gmdate('Y', is_numeric($row->credit_date) ? (int) $row->credit_date : strtotime($row->credit_date))
       : '';
     $output[] = array(
       'id'               => (int) $row->credit_ID,

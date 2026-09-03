@@ -20,7 +20,8 @@
 		text-decoration: none;
 		color: inherit;
 
-		&:hover .artist {
+		&:hover .artist,
+		&:focus-visible .artist {
 			color: var(--wp--preset--color--red-orange);
 			text-decoration: underline;
 		}

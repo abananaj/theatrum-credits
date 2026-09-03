@@ -56,6 +56,9 @@ export default function CreditsManager() {
   const [activeTab, setActiveTab] = useState('cast');
   const listRef = useRef(null);
   const pendingOrderRef = useRef(null);
+  const [announcement, setAnnouncement] = useState('');
+  // Which row (by local id) should receive focus after the next render, and which control inside it.
+  const focusRequestRef = useRef(null);
 
   const loadCredits = useCallback(() => {
     if (!postId) return;
@@ -80,10 +83,12 @@ export default function CreditsManager() {
 
   const addRow = useCallback(() => {
     const maxOrder = rows.reduce((max, r) => Math.max(max, r.order), -1);
+    const localId = newLocalId();
+    focusRequestRef.current = { localId };
     setRows((prev) => [
       ...prev,
       {
-        _localId: newLocalId(),
+        _localId: localId,
         id: null,
         artist_id: 0,
         artist_title: '',
@@ -101,6 +106,11 @@ export default function CreditsManager() {
     setRows((prev) => {
       const row = prev.find((r) => r._localId === localId);
       if (!row) return prev;
+      // Focus the next visible row's first field, or Add Credit if none is left.
+      const visible = prev.filter((r) => !r._deleted && rowMatchesTab(r, row.role_group === 'actor' ? 'cast' : row.role_group === 'producer' ? 'producers' : 'creative'));
+      const idx = visible.findIndex((r) => r._localId === localId);
+      const next = visible[idx + 1] || visible[idx - 1];
+      focusRequestRef.current = next ? { localId: next._localId } : { addButton: true };
       if (row.isNew) return prev.filter((r) => r._localId !== localId);
       return prev.map((r) => (r._localId === localId ? { ...r, _deleted: true } : r));
     });
@@ -215,6 +225,40 @@ export default function CreditsManager() {
   const visibleRows = rows.filter((r) => !r._deleted && rowMatchesTab(r, activeTab));
   const rowsKey = visibleRows.map((r) => r._localId).join(',');
 
+  // Keyboard reorder: same shared-list semantics as drag, one step within the active tab.
+  const moveRowBy = useCallback(
+    (localId, delta) => {
+      const tabLocalIds = visibleRows.map((r) => r._localId);
+      const from = tabLocalIds.indexOf(localId);
+      const to = from + delta;
+      if (from === -1 || to < 0 || to >= tabLocalIds.length) return;
+      moveRowToIndex(localId, to, tabLocalIds);
+      setAnnouncement(`Moved to position ${to + 1} of ${tabLocalIds.length}`);
+      focusRequestRef.current = { localId, control: delta < 0 ? 'up' : 'down' };
+    },
+    [visibleRows, moveRowToIndex]
+  );
+
+  // Apply any pending focus request once the rows have rendered.
+  useEffect(() => {
+    const req = focusRequestRef.current;
+    if (!req || !listRef.current) return;
+    focusRequestRef.current = null;
+    if (req.addButton) {
+      listRef.current.parentElement?.querySelector('.credits-actions button')?.focus();
+      return;
+    }
+    const wrapper = listRef.current.querySelector(`[data-local-id="${req.localId}"]`);
+    if (!wrapper) return;
+    const target =
+      req.control === 'up'
+        ? wrapper.querySelector('.credit-row-move button:first-child')
+        : req.control === 'down'
+          ? wrapper.querySelector('.credit-row-move button:last-child')
+          : wrapper.querySelector('input');
+    (target?.disabled ? wrapper.querySelector('input') : target)?.focus();
+  }, [rowsKey]);
+
   // jQuery UI Sortable (same lib as ACF's repeater). `update` captures the drop target; `stop` cancels jQuery's own DOM move so React's key-based re-render is what actually reorders rows, avoiding the two fighting over the DOM.
   useEffect(() => {
     const $ = window.jQuery;
@@ -261,6 +305,9 @@ export default function CreditsManager() {
 
   return (
     <div className="theatrum-credits-manager">
+      <div className="credits-announcer" aria-live="polite" aria-atomic="true">
+        {announcement}
+      </div>
       {notice && (
         <Notice status={notice.type} isDismissible onRemove={() => setNotice(null)}>
           {notice.message}
@@ -275,12 +322,16 @@ export default function CreditsManager() {
             )}
 
             <div className="credits-list" ref={listRef}>
-              {visibleRows.map((row) => (
+              {visibleRows.map((row, index) => (
                 <CreditRow
                   key={row._localId}
                   row={row}
                   onChange={(updates) => updateRow(row._localId, updates)}
                   onDelete={() => removeRow(row._localId)}
+                  onMoveUp={() => moveRowBy(row._localId, -1)}
+                  onMoveDown={() => moveRowBy(row._localId, 1)}
+                  canMoveUp={index > 0}
+                  canMoveDown={index < visibleRows.length - 1}
                 />
               ))}
             </div>

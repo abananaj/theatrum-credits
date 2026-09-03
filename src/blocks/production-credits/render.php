@@ -61,7 +61,7 @@ foreach ($credits as $row) {
 
   $thumbnail_url = get_the_post_thumbnail_url($artist_id);
   if ($thumbnail_url) {
-    $html .= '<img src="' . esc_url($thumbnail_url) . '" alt="' . esc_attr($artist_title) . '" class="artist-headshot"/>';
+    $html .= '<img src="' . esc_url($thumbnail_url) . '" alt="" class="artist-headshot"/>';
   }
 
   $html .= '<p class="artist">' . esc_html($artist_title) . '</p>';

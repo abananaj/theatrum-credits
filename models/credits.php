@@ -193,6 +193,9 @@ add_action('save_post_credit', function ($post_id) {
   if (wp_is_post_revision($post_id) || wp_is_post_autosave($post_id)) {
     return;
   }
+  if (! current_user_can('edit_post', $post_id)) {
+    return;
+  }
 
   global $wpdb;
 

@@ -119,12 +119,16 @@ class Theatrum_Credits_List_Table extends WP_List_Table
 
   public function no_items()
   {
-    echo 'No credits found.';
+    esc_html_e('No credits found.', 'theatrum-credits');
   }
 }
 
 function theatrum_credits_admin_page()
 {
+  // The submenu is capability-gated, but the callback guards itself too.
+  if (! current_user_can('edit_posts')) {
+    wp_die(esc_html__('You do not have permission to view credits.', 'theatrum-credits'));
+  }
   $table = new Theatrum_Credits_List_Table();
   $table->prepare_items();
   ?>

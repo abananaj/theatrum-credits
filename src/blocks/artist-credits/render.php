@@ -42,7 +42,7 @@ foreach ($credits as $row) {
   $production_url   = get_permalink($production_id);
   $display_role     = $row->credit_role ?: $row->credit_role_group;
   $year             = $row->credit_date
-    ? date('Y', is_numeric($row->credit_date) ? (int) $row->credit_date : strtotime($row->credit_date))
+    ? gmdate('Y', is_numeric($row->credit_date) ? (int) $row->credit_date : strtotime($row->credit_date))
     : '';
 
   $item = '<li class="credit"><a href="' . esc_url($production_url) . '"><span class="title">' . esc_html($production_title) . '</span></a>';
