@@ -4,6 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **[← Back to wp_root](../../../CLAUDE.md)** | [AGENTS.md](AGENTS.md) | [README.md](README.md)
 
+## Markdown Formatting
+
+Write prose as one line per paragraph — never hard-wrap sentences across multiple lines. Tables, code blocks, and lists are unaffected.
+
 ## Project Overview
 
 Theatrum Credits manages production credits (cast & crew) for Chance Theater. Credits are
