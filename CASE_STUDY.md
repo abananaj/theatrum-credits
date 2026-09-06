@@ -2,8 +2,7 @@
 
 > First draft. Component deep-dive; project-level story lives in the [root case study](../../../CASE_STUDY.md).
 
-A custom SQL table, a REST API, and a React editor UI — for the one piece of data
-a theater site can't model as posts and meta.
+A custom SQL table, a REST API, and a React editor UI — for the one piece of data a theater site can't model as posts and meta.
 
 ---
 
@@ -14,8 +13,7 @@ a theater site can't model as posts and meta.
 - Render the same data two ways: by production (the program) and by artist (the résumé).
 - Carry thirteen years of existing credits across without loss.
 
-**Why a `mu-plugin`:** it owns a database table other content points at. Deactivating it would
-silently empty every production page. `mu-plugins` can't be deactivated.
+**Why a `mu-plugin`:** it owns a database table other content points at. Deactivating it would silently empty every production page. `mu-plugins` can't be deactivated.
 
 ---
 
@@ -44,11 +42,9 @@ ct_credits
   credit_created · credit_modified
 ```
 
-Indexed on `credit_artist`, `credit_production`, `credit_role_group`, and the composite
-`(credit_production, credit_order)` that drives ordered display.
+Indexed on `credit_artist`, `credit_production`, `credit_role_group`, and the composite `(credit_production, credit_order)` that drives ordered display.
 
-`credit_name` exists alongside `credit_artist` on purpose — a credit can name someone who
-has no artist record, and it still has to render.
+`credit_name` exists alongside `credit_artist` on purpose — a credit can name someone who has no artist record, and it still has to render.
 
 **The rest**
 

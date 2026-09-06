@@ -91,14 +91,14 @@ Remove:
 
 Rewrite all query functions to use `$wpdb` against ct_credits:
 
-| Function | Query |
-|---|---|
-| `get_production_credits($production_id, $args)` | `WHERE credit_production = %d ORDER BY credit_order ASC` |
-| `get_artist_productions($artist_id, $args)` | `WHERE credit_artist = %d ORDER BY credit_date DESC` |
-| `get_credits_by_group($production_id)` | calls `get_production_credits()`, groups by `credit_role_group` |
-| `get_artist_productions_with_dates($artist_id)` | calls `get_artist_productions()` |
-| `count_artist_productions($artist_id)` | `COUNT(DISTINCT credit_production)` |
-| `count_production_credits($production_id, $role_group)` | `COUNT(*)` with optional role_group filter |
+| Function                                                | Query                                                           |
+| ------------------------------------------------------- | --------------------------------------------------------------- |
+| `get_production_credits($production_id, $args)`         | `WHERE credit_production = %d ORDER BY credit_order ASC`        |
+| `get_artist_productions($artist_id, $args)`             | `WHERE credit_artist = %d ORDER BY credit_date DESC`            |
+| `get_credits_by_group($production_id)`                  | calls `get_production_credits()`, groups by `credit_role_group` |
+| `get_artist_productions_with_dates($artist_id)`         | calls `get_artist_productions()`                                |
+| `count_artist_productions($artist_id)`                  | `COUNT(DISTINCT credit_production)`                             |
+| `count_production_credits($production_id, $role_group)` | `COUNT(*)` with optional role_group filter                      |
 
 All functions return plain arrays of row objects (not WP_Query).
 
@@ -110,14 +110,14 @@ All functions return plain arrays of row objects (not WP_Query).
 
 Namespace: `theatrum/v1`
 
-| Method | Route | Purpose |
-|---|---|---|
-| GET | `/production-credits/{post_id}` | List credits for a production (editor preview) |
-| POST | `/production-credits/{post_id}` | Create a new credit |
-| POST | `/production-credits/{post_id}/reorder` | Update credit_order for all credits in a production |
-| GET | `/artist-credits/{post_id}` | List credits for an artist (editor preview) |
-| PUT | `/credit/{credit_id}` | Update a single credit |
-| DELETE | `/credit/{credit_id}` | Delete a single credit |
+| Method | Route                                   | Purpose                                             |
+| ------ | --------------------------------------- | --------------------------------------------------- |
+| GET    | `/production-credits/{post_id}`         | List credits for a production (editor preview)      |
+| POST   | `/production-credits/{post_id}`         | Create a new credit                                 |
+| POST   | `/production-credits/{post_id}/reorder` | Update credit_order for all credits in a production |
+| GET    | `/artist-credits/{post_id}`             | List credits for an artist (editor preview)         |
+| PUT    | `/credit/{credit_id}`                   | Update a single credit                              |
+| DELETE | `/credit/{credit_id}`                   | Delete a single credit                              |
 
 Note: single-credit operations use `/credit/{credit_id}` to avoid URL ambiguity with the production-scoped routes that also accept a numeric ID.
 
@@ -294,7 +294,6 @@ Phase 1  → Phase 2 (run migration) → Phase 3 → Phase 4
 → Phase 7 → Phase 8 → Phase 9 → Phase 10
 ```
 
-Do not proceed past Phase 5 without confirming the frontend blocks
-display correctly from ct_credits data.
+Do not proceed past Phase 5 without confirming the frontend blocks display correctly from ct_credits data.
 
 **Warning:** After Phase 3 removes the `sync_repeater_to_credits` hook, there is no write path for credits until the React meta box is live in Phase 6. Do not run Phase 3 on the production database without completing through Phase 6 in the same session.

@@ -1,8 +1,6 @@
 # Artist Credits Block (`theatrum/artist-credits`)
 
-Displays the productions an artist has worked on, on artist pages. Fetches via
-`GET /theatrum/v1/artist-credits/{post_id}`, which queries the `ct_credits` custom table
-(via `get_artist_productions()`) — not ACF fields.
+Displays the productions an artist has worked on, on artist pages. Fetches via `GET /theatrum/v1/artist-credits/{post_id}`, which queries the `ct_credits` custom table (via `get_artist_productions()`) — not ACF fields.
 
 ## Key Features
 
