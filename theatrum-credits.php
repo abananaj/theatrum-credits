@@ -2,10 +2,10 @@
 
 /**
  * Plugin Name: Theatrum Credits
- * Plugin URI: https://chancetheater.org
- * Description: Production credits management with custom blocks for cast and crew display
+ * Plugin URI: https://theatrum.dev
+ * Description: Production credits management with custom blocks for creative team, cast, and crew display.
  * Version: 1.0.0
- * Author: Chance Theater
+ * Author: Anna Jennings (Theatrum Mundi)
  * Text Domain: theatrum-credits
  * Domain Path: /languages
  * License: GPL v2 or later
