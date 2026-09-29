@@ -42,15 +42,39 @@ require_once THEATRUM_CREDITS_PLUGIN_DIR . 'inc/rest-endpoints.php';
 require_once THEATRUM_CREDITS_PLUGIN_DIR . 'inc/admin-list.php';
 
 /**
- * Register the artist-credits and production-credits blocks.
+ * Register the artist-credits, artist-classes and production-credits blocks.
  */
 function theatrum_credits_register_blocks() {
-  $blocks = array('artist-credits', 'production-credits');
+  $blocks = array('artist-credits', 'artist-classes', 'production-credits');
   foreach ($blocks as $block) {
     register_block_type(THEATRUM_CREDITS_PLUGIN_DIR . 'build/blocks/' . $block);
   }
 }
 add_action('init', 'theatrum_credits_register_blocks');
+
+/**
+ * Drop an artist accordion item (ct-artist-classes-item / ct-artist-credits-item) when its block rendered nothing.
+ *
+ * @param string $block_content Rendered accordion item.
+ * @param array  $block         Parsed block.
+ * @return string
+ */
+function theatrum_credits_hide_empty_classes_item($block_content, $block) {
+  $class_name = $block['attrs']['className'] ?? '';
+  $items      = array(
+    'ct-artist-classes-item' => 'wp-block-theatrum-artist-classes',
+    'ct-artist-credits-item' => 'wp-block-theatrum-artist-credits',
+  );
+
+  foreach ($items as $item_class => $block_class) {
+    if (false !== strpos($class_name, $item_class) && false === strpos($block_content, $block_class)) {
+      return '';
+    }
+  }
+
+  return $block_content;
+}
+add_filter('render_block_core/accordion-item', 'theatrum_credits_hide_empty_classes_item', 10, 2);
 
 /**
  * Ensure the "Production" block category exists.

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "theatrum/artist-classes",
+  "title": "Artist Classes",
+  "category": "production",
+  "description": "List the conservatory classes the current artist teaches",
+  "textdomain": "theatrum-credits",
+  "icon": "welcome-learn-more",
+  "usesContext": [
+    "postId"
+  ],
+  "supports": {
+    "html": false,
+    "align": true,
+    "anchor": true,
+    "className": true,
+    "customClassName": true,
+    "typography": {
+      "fontSize": true,
+      "lineHeight": true
+    },
+    "color": {
+      "text": true,
+      "background": true
+    },
+    "spacing": {
+      "margin": true,
+      "padding": true
+    }
+  },
+  "editorScript": "file:./index.js",
+  "editorStyle": "file:./index.css",
+  "style": "file:./style-index.css",
+  "render": "file:./render.php"
+}

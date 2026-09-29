@@ -137,7 +137,7 @@ function theatrum_credits_get_artist_productions($artist_id, $args = array()) {
     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching -- cached above/below on $key.
     $rows = $wpdb->get_results(
         $wpdb->prepare(
-            "SELECT * FROM %i WHERE credit_artist = %d AND credit_role_group = %s ORDER BY credit_date DESC, credit_order ASC",
+            "SELECT * FROM %i WHERE credit_artist = %d AND credit_role_group = %s ORDER BY IF(credit_date REGEXP '^[0-9]+$', CAST(credit_date AS UNSIGNED), UNIX_TIMESTAMP(STR_TO_DATE(credit_date, '%%M %%e, %%Y'))) DESC, credit_order ASC",
             $table,
             $artist_id,
             $args['role_group']
@@ -147,7 +147,7 @@ function theatrum_credits_get_artist_productions($artist_id, $args = array()) {
     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.NoCaching -- cached above/below on $key.
     $rows = $wpdb->get_results(
         $wpdb->prepare(
-            "SELECT * FROM %i WHERE credit_artist = %d ORDER BY credit_date DESC, credit_order ASC",
+            "SELECT * FROM %i WHERE credit_artist = %d ORDER BY IF(credit_date REGEXP '^[0-9]+$', CAST(credit_date AS UNSIGNED), UNIX_TIMESTAMP(STR_TO_DATE(credit_date, '%%M %%e, %%Y'))) DESC, credit_order ASC",
             $table,
             $artist_id
         )

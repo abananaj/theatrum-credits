@@ -34,7 +34,13 @@ $item_width         = isset($attributes['itemWidth']) && preg_match($css_length_
 
 $flex_style = sprintf('justify-content: %s; align-items: %s; --credit-width: %s;', $justify_content, $align_items, $item_width);
 
-$items = array();
+$items        = array();
+$series_short = array(
+  'main-series' => __('Main', 'theatrum-credits'),
+  'otr-series'  => __('OTR', 'theatrum-credits'),
+);
+
+update_object_term_cache(array_unique(wp_list_pluck($credits, 'credit_production')), 'production');
 
 foreach ($credits as $row) {
   $production_id    = (int) $row->credit_production;
@@ -45,7 +51,14 @@ foreach ($credits as $row) {
     ? gmdate('Y', is_numeric($row->credit_date) ? (int) $row->credit_date : strtotime($row->credit_date))
     : '';
 
-  $item = '<li class="credit"><a href="' . esc_url($production_url) . '"><span class="title">' . esc_html($production_title) . '</span></a>';
+  $series_terms = get_the_terms($production_id, 'series');
+  $series_tag   = '';
+  if (is_array($series_terms) && ! empty($series_terms)) {
+    $series_slug = $series_terms[0]->slug;
+    $series_tag  = ' <span class="series-tag series-' . esc_attr($series_slug) . '">' . esc_html($series_short[$series_slug] ?? $series_terms[0]->name) . '</span>';
+  }
+
+  $item = '<li class="credit"><a href="' . esc_url($production_url) . '"><span class="title">' . esc_html($production_title) . '</span></a>' . $series_tag;
 
   $parts = array();
   if ( ! empty($display_role)) { $parts[] = '<span class="role">' . esc_html($display_role) . ',</span><br>';
