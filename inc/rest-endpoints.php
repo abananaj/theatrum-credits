@@ -146,6 +146,10 @@ function theatrum_credits_get_production_credits_callback($request) {
   if ( ! $production_id) {
     return new WP_Error('invalid_id', __('Invalid production.', 'theatrum-credits'), array('status' => 400));
   }
+  // 404 for unpublished productions unless the caller can read them.
+  if (get_post_status($production_id) !== 'publish' && ! current_user_can('read_post', $production_id)) {
+    return new WP_Error('rest_post_invalid_id', __('Invalid post ID.', 'theatrum-credits'), array('status' => 404));
+  }
   $rows = theatrum_credits_get_production_credits($production_id);
   // Public route: don't leak draft/private artists to anonymous callers; editors still see every row.
   if ( ! current_user_can('edit_posts')) {
